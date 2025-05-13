@@ -5,6 +5,7 @@
  */
 
 #include "config/ParameterConfig.h"
+#include "LoggerUtil.h"
 
 using namespace metacg::pgis::config;
 
@@ -44,7 +45,7 @@ ParameterConfig::ParameterConfig() {
       json.at(overheadName).get_to<OverheadConfig>(*overheadConfig);
     }
   } catch (nlohmann::json::exception& e) {
-    spdlog::get("errconsole")->error("Unable to parse parameter configuration file: {}", e.what());
+    metacg::MCGLogger::logError("Unable to parse parameter configuration file: {}", e.what());
     exit(EXIT_FAILURE);
   }
 }

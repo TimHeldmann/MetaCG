@@ -71,7 +71,7 @@ class VersionOneMetaCGReader : public metacg::io::MetaCGReader {
     if (!jsonField.is_null()) {
       field = jsonField.template get<typename std::remove_reference<FieldTy>::type>();
     } else {
-      metacg::MCGLogger::instance().getErrConsole()->warn("Tried to read non-existing field {} for node.", key);
+      metacg::MCGLogger::logWarn("Tried to read non-existing field {} for node.", key);
     }
   }
 

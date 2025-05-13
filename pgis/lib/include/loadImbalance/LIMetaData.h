@@ -30,7 +30,7 @@ class LIMetaData : public metacg::MetaData::Registrar<LIMetaData> {
   LIMetaData() = default;
   explicit LIMetaData(const nlohmann::json& j) {
     if (j.is_null()) {
-      metacg::MCGLogger::instance().getConsole()->trace("Could not retrieve meta data for {}", key);
+      metacg::MCGLogger::instance().trace("Could not retrieve meta data for {}", key);
       return;
     }
 
@@ -38,11 +38,11 @@ class LIMetaData : public metacg::MetaData::Registrar<LIMetaData> {
     bool visited = j["visited"].get<bool>();
 
     if (irrelevant) {
-      metacg::MCGLogger::instance().getConsole()->debug("Setting flag irrelevant");
+      metacg::MCGLogger::instance().debug("Setting flag irrelevant");
       flag(LoadImbalance::FlagType::Irrelevant);
     }
     if (visited) {
-      metacg::MCGLogger::instance().getConsole()->debug("Setting flag visited");
+      metacg::MCGLogger::instance().debug("Setting flag visited");
       flag(LoadImbalance::FlagType::Visited);
     }
   };
@@ -61,7 +61,7 @@ class LIMetaData : public metacg::MetaData::Registrar<LIMetaData> {
 
   void merge(const MetaData& toMerge) final {
     if (std::strcmp(toMerge.getKey(), getKey()) != 0) {
-      metacg::MCGLogger::instance().getErrConsole()->error(
+      metacg::MCGLogger::logError(
           "The MetaData which was tried to merge with LIMetaData was of a different MetaData type");
       abort();
     }

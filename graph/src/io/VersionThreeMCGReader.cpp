@@ -13,13 +13,11 @@
 std::unique_ptr<metacg::Callgraph> metacg::io::VersionThreeMetaCGReader::read() {
   const metacg::RuntimeTimer rtt("VersionThreeMetaCGReader::read");
   const MCGFileFormatInfo ffInfo{3, 0};
-  auto console = metacg::MCGLogger::instance().getConsole();
-  auto errConsole = metacg::MCGLogger::instance().getErrConsole();
 
   auto j = source.get();
   auto mcgInfo = j[ffInfo.metaInfoFieldName];
   if (mcgInfo.is_null()) {
-    errConsole->error("Could not read version info from metacg file.");
+    metacg::MCGLogger::logError("Could not read version info from metacg file.");
     throw std::runtime_error("Could not read version info from metacg file");
   }
   /// XXX How to make that we can use the MCGGeneratorVersionInfo to access the identifiers
@@ -28,21 +26,21 @@ std::unique_ptr<metacg::Callgraph> metacg::io::VersionThreeMetaCGReader::read() 
   auto generatorVersion = mcgInfo["generator"]["version"].get<std::string>();
   const MCGGeneratorVersionInfo genVersionInfo{generatorName, metacg::util::getMajorVersionFromString(generatorVersion),
                                                metacg::util::getMinorVersionFromString(generatorVersion), ""};
-  console->info("The metacg (version {}) file was generated with {} (version: {})", mcgVersion, generatorName,
+  metacg::MCGLogger::logInfo("The metacg (version {}) file was generated with {} (version: {})", mcgVersion, generatorName,
                 generatorVersion);
   if (mcgVersion.at(0) != '3') {
-    console->info("This reader can only read metacg (version 2) files");
+    metacg::MCGLogger::logError("This reader can only read metacg (version 2) files");
     throw std::runtime_error("Trying to read incompatible file with MCGReader3");
   }
   const MCGFileInfo fileInfo{ffInfo, genVersionInfo};
   auto& jsonCG = j[ffInfo.cgFieldName];
   if (jsonCG.is_null()) {
-    errConsole->error("The call graph in the metacg file was null.");
+    metacg::MCGLogger::logError("The call graph in the metacg file was null.");
     throw std::runtime_error("CG in metacg file was null.");
   }
 
   if (!jsonCG.contains("nodes") || !jsonCG.contains("edges")) {
-    errConsole->error("Could not find nodes and edges in file.");
+    metacg::MCGLogger::logError("Could not find nodes and edges in file.");
     throw std::runtime_error("Node/Edge container not found");
   }
   if (isV3DebugFormat(jsonCG)) {

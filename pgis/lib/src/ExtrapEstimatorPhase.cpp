@@ -26,8 +26,8 @@ using namespace metacg;
 namespace pira {
 
 void ExtrapLocalEstimatorPhaseBase::modifyGraph(metacg::CgNode* mainNode) {
-  auto console = metacg::MCGLogger::instance().getConsole();
-  console->trace("Running ExtrapLocalEstimatorPhaseBase::modifyGraph");
+  auto console = metacg::MCGLogger::instance();
+  console.trace("Running ExtrapLocalEstimatorPhaseBase::modifyGraph");
   metacg::analysis::ReachabilityAnalysis ra(graph);
 
   for (const auto& elem : graph->getNodes()) {
@@ -48,7 +48,7 @@ void ExtrapLocalEstimatorPhaseBase::modifyGraph(metacg::CgNode* mainNode) {
 
       if (allNodesToMain) {
         auto nodesToMain = CgHelper::allNodesToMain(n, mainNode, graph, ra);
-        console->trace("Node {} has {} nodes on paths to main.", n->getFunctionName(), nodesToMain.size());
+        console.trace("Node {} has {} nodes on paths to main.", n->getFunctionName(), nodesToMain.size());
         for (const auto& ntm : nodesToMain) {
           metacg::pgis::instrumentNode(ntm);
           //          ntm->setState(CgNodeState::INSTRUMENT_WITNESS);
@@ -59,8 +59,6 @@ void ExtrapLocalEstimatorPhaseBase::modifyGraph(metacg::CgNode* mainNode) {
 }
 
 void ExtrapLocalEstimatorPhaseBase::printReport() {
-  auto console = metacg::MCGLogger::instance().getConsole();
-
   std::stringstream ss;
 
   std::sort(std::begin(kernels), std::end(kernels), [&](auto& e1, auto& e2) { return e1.first > e2.first; });
@@ -72,7 +70,7 @@ void ExtrapLocalEstimatorPhaseBase::printReport() {
     }
   }
 
-  console->info("$$ Identified Kernels (w/ Runtime) $$\n{}$$ End Kernels $$", ss.str());
+  metacg::MCGLogger::logInfo("$$ Identified Kernels (w/ Runtime) $$\n{}$$ End Kernels $$", ss.str());
 }
 
 std::pair<bool, double> ExtrapLocalEstimatorPhaseBase::shouldInstrument(metacg::CgNode* node) const {
@@ -81,8 +79,8 @@ std::pair<bool, double> ExtrapLocalEstimatorPhaseBase::shouldInstrument(metacg::
 }
 
 std::pair<bool, double> ExtrapLocalEstimatorPhaseSingleValueFilter::shouldInstrument(metacg::CgNode* node) const {
-  auto console = metacg::MCGLogger::instance().getConsole();
-  console->trace("Running {}", __PRETTY_FUNCTION__);
+  auto console = metacg::MCGLogger::instance();
+  console.trace("Running {}", __PRETTY_FUNCTION__);
 
   // get extrapolation threshold from parameter configPtr
   const double extrapolationThreshold = pgis::config::ParameterConfig::get().getPiraIIConfig()->extrapolationThreshold;
@@ -92,7 +90,7 @@ std::pair<bool, double> ExtrapLocalEstimatorPhaseSingleValueFilter::shouldInstru
     auto rtVec = pdII->getRuntimeVec();
 
     const auto median = [&](auto vec) {
-      console->debug("Vec size {}", vec.size());
+      console.debug("Vec size {}", vec.size());
       if (vec.size() % 2 == 0) {
         return vec[vec.size() / 2];
       } else {
@@ -106,7 +104,7 @@ std::pair<bool, double> ExtrapLocalEstimatorPhaseSingleValueFilter::shouldInstru
 
     auto medianValue = median(rtVec);
     const std::string funcName{__PRETTY_FUNCTION__};
-    console->debug("{}: No. of RT values: {}, median RT value {}, threshold value {}", funcName, rtVec.size(),
+    console.debug("{}: No. of RT values: {}, median RT value {}, threshold value {}", funcName, rtVec.size(),
                    medianValue, extrapolationThreshold);
     if (medianValue > extrapolationThreshold) {
       return {true, medianValue};
@@ -114,7 +112,7 @@ std::pair<bool, double> ExtrapLocalEstimatorPhaseSingleValueFilter::shouldInstru
   }
 
   if (!node->get<PiraTwoData>()->getExtrapModelConnector().isModelSet()) {
-    console->trace("Model not set for {}", node->getFunctionName());
+    console.trace("Model not set for {}", node->getFunctionName());
     return {false, -1};
   }
 
@@ -122,7 +120,7 @@ std::pair<bool, double> ExtrapLocalEstimatorPhaseSingleValueFilter::shouldInstru
 
   auto fVal = evalModelWValue(node, modelValue);
 
-  console->debug("Model value for function {} is calcuated at x = {} as {}", node->getFunctionName(),
+  console.debug("Model value for function {} is calcuated at x = {} as {}", node->getFunctionName(),
                  modelValue[0].second, fVal);
 
   return {fVal > extrapolationThreshold, fVal};

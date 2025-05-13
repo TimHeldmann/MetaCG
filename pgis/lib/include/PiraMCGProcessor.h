@@ -52,7 +52,7 @@ class PiraMCGProcessor {
   void printMainRuntime() {
     const auto mainNode = graph->getMain();
     const auto inclTime = mainNode->get<pira::BaseProfileData>()->getInclusiveRuntimeInSeconds();
-    metacg::MCGLogger::instance().getConsole()->info("Runtime of main is: {}", inclTime);
+    metacg::MCGLogger::logInfo("Runtime of main is: {}", inclTime);
   }
 
  private:

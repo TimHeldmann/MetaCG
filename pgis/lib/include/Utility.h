@@ -30,9 +30,9 @@ inline bool stringEndsWith(const std::string& s, const std::string& suffix) {
 inline std::string getHostname() {
   char* cName = (char*)malloc(255 * sizeof(char));
   if (!gethostname(cName, 255)) {
-    metacg::MCGLogger::instance().getErrConsole()->error("Unable to determine hostname");
+    metacg::MCGLogger::logError("Unable to determine hostname");
   } else {
-    metacg::MCGLogger::instance().getConsole()->debug("Running on host: {}", cName);
+    metacg::MCGLogger::instance().debug("Running on host: {}", cName);
   }
   std::string name(cName);
   free(cName);

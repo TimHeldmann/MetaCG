@@ -37,9 +37,8 @@ void metacg::pgis::PiraMCGProcessor::registerEstimatorPhase(EstimatorPhase* phas
 }
 
 void metacg::pgis::PiraMCGProcessor::finalizeGraph() {
-  auto errConsole = metacg::MCGLogger::instance().getErrConsole();
   if (graph->isEmpty()) {
-    errConsole->error("Running the processor on empty graph. Need to construct graph.");
+    metacg::MCGLogger::logError("Running the processor on empty graph. Need to construct graph.");
     exit(metacg::pgis::ErrorCode::NoGraphConstructed);
   }
 
@@ -49,7 +48,7 @@ void metacg::pgis::PiraMCGProcessor::finalizeGraph() {
     // We assume that 'main' is always reachable.
     auto mainNode = graph->getMain();
     if (mainNode == nullptr) {
-      errConsole->error("PiraMCGProcessor: Cannot find main function");
+      metacg::MCGLogger::logError("PiraMCGProcessor: Cannot find main function");
       exit(metacg::pgis::ErrorCode::NoMainFunctionFound);
     }
   }
@@ -60,7 +59,7 @@ void metacg::pgis::PiraMCGProcessor::applyRegisteredPhases() {
   auto mainFunction = graph->getMain();
 
   if (mainFunction == nullptr) {
-    metacg::MCGLogger::instance().getErrConsole()->error("PiraMCGProcessor: Cannot find main function.");
+    metacg::MCGLogger::logError("PiraMCGProcessor: Cannot find main function.");
     exit(metacg::pgis::ErrorCode::NoMainFunctionFound);
   }
 
@@ -79,7 +78,7 @@ void metacg::pgis::PiraMCGProcessor::applyRegisteredPhases() {
       phase->modifyGraph(mainFunction);
       phase->generateIC();
 
-      metacg::MCGLogger::instance().getConsole()->info("Print phase report");
+      metacg::MCGLogger::logInfo("Print phase report");
       phase->printReport();
 
       const InstrumentationConfiguration& IC = phase->getIC();
@@ -125,7 +124,7 @@ bool metacg::pgis::PiraMCGProcessor::readWhitelist(std::vector<std::string>& whi
   std::ifstream in(configPtr->whitelist.c_str());
 
   if (!in) {
-    metacg::MCGLogger::instance().getErrConsole()->error("Cannot open file {}", configPtr->whitelist);
+    metacg::MCGLogger::logError("Cannot open file {}", configPtr->whitelist);
     return false;
   }
 
@@ -153,7 +152,7 @@ void metacg::pgis::PiraMCGProcessor::dumpInstrumentedNames(InstrumentationConfig
   if (noOutputRequired) {
     return;
   }
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
 
   //  std::string filename =
   //      configPtr->outputFile + "/instrumented-" + configPtr->appName + "-" + IC.phaseName + ".txt";
@@ -165,17 +164,17 @@ void metacg::pgis::PiraMCGProcessor::dumpInstrumentedNames(InstrumentationConfig
   char buff[PATH_MAX];
   const auto ret = getcwd(buff, PATH_MAX);
   if (ret == nullptr) {
-    metacg::MCGLogger::instance().getErrConsole()->error("Cannot get current working directory");
+    metacg::MCGLogger::logError("Cannot get current working directory");
     exit(metacg::pgis::ErrorCode::CouldNotGetCWD);
   }
   const std::string curCwd(buff);
-  console->info("Writing to {}. Current cwd {}", filename, curCwd);
+  metacg::MCGLogger::logInfo("Writing to {}. Current cwd {}", filename, curCwd);
   std::ofstream outfile(filename, std::ofstream::out);
 
   // The simple whitelist used so far in PIRA
   const bool scorepOutput = ::pgis::config::GlobalConfig::get().getAs<bool>("scorep-out");
   if (!scorepOutput) {
-    console->debug("Using plain whitelist format");
+    console.debug("Using plain whitelist format");
     if (IC.instrumentedNodes.empty()) {
       outfile << "aFunctionThatDoesNotExist" << std::endl;
     } else {
@@ -184,7 +183,7 @@ void metacg::pgis::PiraMCGProcessor::dumpInstrumentedNames(InstrumentationConfig
       }
     }
   } else {
-    console->debug("Using score-p format");
+    console.debug("Using score-p format");
     const std::string scorepBegin{"SCOREP_REGION_NAMES_BEGIN"};
     const std::string scorepEnd{"SCOREP_REGION_NAMES_END"};
     const std::string mangled{"MANGLED"};
@@ -216,34 +215,34 @@ Callgraph* metacg::pgis::PiraMCGProcessor::getCallgraph(PiraMCGProcessor* cg) {
 }
 
 void metacg::pgis::PiraMCGProcessor::attachExtrapModels() {
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
   epModelProvider.buildModels();
   for (const auto& elem : graph->getNodes()) {
     const auto& n = elem.second.get();
-    console->debug("Attaching models for {}", n->getFunctionName());
+    console.debug("Attaching models for {}", n->getFunctionName());
     auto ptd = n->getOrCreateMD<PiraTwoData>(epModelProvider.getModelFor(n->getFunctionName()));
     if (!ptd->getExtrapModelConnector().hasModels()) {
-      console->trace("attachExtrapModels hasModels == false -> Setting new ModelConnector");
+      console.trace("attachExtrapModels hasModels == false -> Setting new ModelConnector");
       ptd->setExtrapModelConnector(epModelProvider.getModelFor(n->getFunctionName()));
     }
 
     ptd->getExtrapModelConnector().setEpolator(extrapconnection::ExtrapExtrapolator(epModelProvider.getConfigValues()));
 
     if (ptd->getExtrapModelConnector().hasModels()) {
-      console->trace("attachExtrapModels for {} hasModels == true -> Use model aggregation strategy.",
+      console.trace("attachExtrapModels for {} hasModels == true -> Use model aggregation strategy.",
                      n->getFunctionName());
       auto& pConfig = ::pgis::config::ParameterConfig::get();
       ptd->getExtrapModelConnector().modelAggregation(pConfig.getPiraIIConfig()->modelAggregationStrategy);
     }
-    console->debug("{}: No. of models: {}, model is set {}", n->getFunctionName(),
+    console.debug("{}: No. of models: {}, model is set {}", n->getFunctionName(),
                    n->get<PiraTwoData>()->getExtrapModelConnector().modelCount(),
                    n->get<PiraTwoData>()->getExtrapModelConnector().isModelSet());
-    console->debug("{}: models: {}", n->getFunctionName(),
+    console.debug("{}: models: {}", n->getFunctionName(),
                    n->get<PiraTwoData>()->getExtrapModelConnector().getModelStrings());
     if (n->get<PiraTwoData>()->getExtrapModelConnector().isModelSet()) {
     }
-    console->debug("{}: aggregated/selected model: {}", n->getFunctionName(),
+    console.debug("{}: aggregated/selected model: {}", n->getFunctionName(),
                    n->get<PiraTwoData>()->getExtrapModelConnector().getEPModelFunctionAsString());
   }
-  console->info("Attaching Extra-P models done");
+  MCGLogger::logInfo("Attaching Extra-P models done");
 }

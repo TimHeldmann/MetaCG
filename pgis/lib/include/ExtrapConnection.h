@@ -106,7 +106,7 @@ class ExtrapConnector {
  public:
   explicit ExtrapConnector(std::vector<EXTRAP::Model*> models, EXTRAP::ParameterList parameterList)
       : models(models), paramList(parameterList), epolator(ExtrapExtrapolator({})) {
-    metacg::MCGLogger::instance().getConsole()->trace("ExtrapConnector: explicit ctor: models {}", models.size());
+    metacg::MCGLogger::instance().trace("ExtrapConnector: explicit ctor: models {}", models.size());
   }
 
   ~ExtrapConnector() = default;
@@ -116,7 +116,7 @@ class ExtrapConnector {
         models(other.models),
         paramList(other.paramList),
         epolator(other.epolator) {
-    metacg::MCGLogger::instance().getConsole()->trace("ExtrapConnector: copy ctor\nother.models: {}\nthis.models: {}",
+    metacg::MCGLogger::instance().trace("ExtrapConnector: copy ctor\nother.models: {}\nthis.models: {}",
                                                       other.models.size(), this->models.size());
   }
 
@@ -125,7 +125,7 @@ class ExtrapConnector {
     this->models = other.models;
     this->paramList = other.paramList;
     this->epolator = other.epolator;
-    metacg::MCGLogger::instance().getConsole()->trace(
+    metacg::MCGLogger::instance().trace(
         "ExtrapConnector: copy assignment operator\nother.models: {}\nthis.models: {}", other.models.size(),
         this->models.size());
     return *this;
@@ -205,7 +205,7 @@ class ExtrapModelProvider {
     auto paramList = getParameterList();
 
     auto m = models[functionName];
-    metacg::MCGLogger::instance().getConsole()->debug(
+    metacg::MCGLogger::instance().debug(
         "ModelProvider:getModelFor {}: {}\nUsing mangled name: {}", demangledName,
         m.size() > 0 ? m.front()->getModelFunction()->getAsString(getParameterList()) : " NONE ", functionName);
     return ExtrapConnector(m, paramList);

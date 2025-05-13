@@ -22,14 +22,11 @@
 using namespace metacg;
 
 int main(int argc, char** argv) {
-  auto console = MCGLogger::instance().getConsole();
-  auto errConsole = MCGLogger::instance().getErrConsole();
-
-  console->info("Running metacg::CGMerge2 (version {}.{})\nGit revision: {}", MetaCG_VERSION_MAJOR,
+  MCGLogger::logInfo("Running metacg::CGMerge2 (version {}.{})\nGit revision: {}", MetaCG_VERSION_MAJOR,
                 MetaCG_VERSION_MINOR, MetaCG_GIT_SHA);
 
   if (argc < 3) {
-    errConsole->error("Invalid input arguments. Usage: cgmerge <outfile> <infile1> <infile2> ...");
+    MCGLogger::logError("Invalid input arguments. Usage: cgmerge <outfile> <infile1> <infile2> ...");
     return EXIT_FAILURE;
   }
 
@@ -60,17 +57,17 @@ int main(int argc, char** argv) {
   for (auto& inFile : inputFiles) {
     io::FileSource fs(inFile);
     if (fs.get().is_null()) {
-      errConsole->error("Input file is NULL: {}", inFile);
+      MCGLogger::logError("Input file is NULL: {}", inFile);
       continue;
     }
 
     if (fs.getFormatVersion() != versionStr) {
-      errConsole->warn("File format version does not match for input file {}", inFile);
+      MCGLogger::logWarn("File format version does not match for input file {}", inFile);
     }
 
     auto mcgReader = io::createReader(fs);
     if (!mcgReader) {
-      errConsole->error("Unsupported MetaCG format version: {}", versionStr);
+      MCGLogger::logError("Unsupported MetaCG format version: {}", versionStr);
       return EXIT_FAILURE;
     }
     mcgManager.addToManagedGraphs(inFile, mcgReader->read());
@@ -80,7 +77,7 @@ int main(int argc, char** argv) {
 
   auto mcgWriter = io::createWriter(mcgVersion);
   if (!mcgWriter) {
-    errConsole->error("Unable to create a writer for format version {}", mcgVersion);
+    MCGLogger::logError("Unable to create a writer for format version {}", mcgVersion);
     return EXIT_FAILURE;
   }
 
@@ -91,6 +88,6 @@ int main(int argc, char** argv) {
   std::ofstream os(outfile);
   os << jsonSink.getJson() << std::endl;
 
-  console->info("Done merging");
+  MCGLogger::logInfo("Done merging");
   return EXIT_SUCCESS;
 }

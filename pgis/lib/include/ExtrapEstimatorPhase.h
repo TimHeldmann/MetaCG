@@ -44,7 +44,7 @@ inline bool isConstant(EXTRAP::SingleParameterFunction* func) { return func->get
 template <typename T>
 inline bool isConstant(T paramCont, const std::unique_ptr<EXTRAP::Function>& func) {
   if (paramCont.size() < 1) {
-    metacg::MCGLogger::instance().getErrConsole()->error("{}: Less than one parameter found.", __FUNCTION__);
+    metacg::MCGLogger::logError("{}: Less than one parameter found.", __FUNCTION__);
     assert(paramCont.size() > 0 && "There should be at least one parameter stored per function");
   }
 
@@ -117,9 +117,9 @@ auto ExtrapLocalEstimatorPhaseBase::evalModelWValue(metacg::CgNode* n,
 
   std::map<EXTRAP::Parameter, double> evalOps;
 
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
   for (const auto& p : values) {
-    console->debug("EvalModel: Setting {} to {}", p.first, p.second);
+    console.debug("EvalModel: Setting {} to {}", p.first, p.second);
     evalOps.insert(std::make_pair(EXTRAP::Parameter(p.first), p.second));
   }
 

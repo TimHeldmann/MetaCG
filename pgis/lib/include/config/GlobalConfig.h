@@ -61,7 +61,7 @@ class HeuristicSelection {
     } else if (name == "global_loopdepth") {
       out.mode = HeuristicSelectionEnum::GlOBAL_LOOPDEPTH;
     } else {
-      metacg::MCGLogger::instance().getErrConsole()->error(
+      metacg::MCGLogger::logError(
           "Invalid input for heuristic selection\n"
           "Valid values: statements, conditionalbranches, conditionalbranches_reverse, fp_and_mem_ops, loopdepth, "
           "global_loopdepth\n"
@@ -101,7 +101,7 @@ class CuttoffSelection {
     } else if (name == "unique_median") {
       out.mode = CuttoffSelectionEnum::UNIQUE_MEDIAN;
     } else {
-      metacg::MCGLogger::instance().getErrConsole()->error(
+      metacg::MCGLogger::logError(
           "Invalid input for cuttof selection\n"
           "Valid values: max, median, unique_median\n"
           "Default: unique_median");
@@ -139,7 +139,7 @@ class OverheadSelection {
     } else if (name == "time_per_call_keep_small") {
       out.mode = OverheadSelectionEnum::TimePerCallKeepSmall;
     } else {
-      metacg::MCGLogger::instance().getErrConsole()->error(
+      metacg::MCGLogger::logError(
           "Invalid input for overhead algorithm selection\n"
           "Valid values: none, random, time_per_call, time_per_call_keep_small\n"
           "Default: none");
@@ -273,7 +273,7 @@ class GlobalConfig {
       auto opt = configOptions.at(optionName);
       return opt;
     } catch (std::out_of_range& exc) {
-      metacg::MCGLogger::instance().getErrConsole()->warn("No option named {}", optionName);
+      metacg::MCGLogger::logWarn("No option named {}", optionName);
       return {};
     }
   }
@@ -285,7 +285,7 @@ class GlobalConfig {
   bool putOption(const std::string& optionName, ValType& value) {
     auto exists = (configOptions.find(optionName) != configOptions.end());
     if (exists) {
-      metacg::MCGLogger::instance().getErrConsole()->warn("Option named {} already exists.", optionName);
+      metacg::MCGLogger::logWarn("Option named {} already exists.", optionName);
     }
 
     configOptions.try_emplace(optionName, value);

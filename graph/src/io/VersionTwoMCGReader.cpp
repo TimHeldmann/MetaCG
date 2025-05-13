@@ -12,20 +12,18 @@
 std::unique_ptr<metacg::Callgraph> metacg::io::VersionTwoMetaCGReader::read() {
   const metacg::RuntimeTimer rtt("VersionTwoMetaCGReader::read");
   const metacg::MCGFileFormatInfo ffInfo{2, 0};
-  auto console = metacg::MCGLogger::instance().getConsole();
-  auto errConsole = metacg::MCGLogger::instance().getErrConsole();
 
   auto j = source.get();
 
   if (j.is_null()) {
     const std::string errorMsg = "JSON source did not contain any data.";
-    errConsole->error(errorMsg);
+    metacg::MCGLogger::logError(errorMsg);
     throw std::runtime_error(errorMsg);
   }
 
   if (!j.contains(ffInfo.metaInfoFieldName) || j.at(ffInfo.metaInfoFieldName).is_null()) {
     const std::string errorMsg = "Could not read version info from metacg file.";
-    errConsole->error(errorMsg);
+    metacg::MCGLogger::logError(errorMsg);
     throw std::runtime_error(errorMsg);
   }
 
@@ -37,7 +35,7 @@ std::unique_ptr<metacg::Callgraph> metacg::io::VersionTwoMetaCGReader::read() {
 
   if (mcgVersion.compare(0, 1, std::string("2")) != 0) {
     const std::string errorMsg = "File is of version " + mcgVersion + ", this reader handles version 2.x";
-    errConsole->error(errorMsg);
+    metacg::MCGLogger::logError(errorMsg);
     throw std::runtime_error(errorMsg);
   }
 
@@ -45,13 +43,13 @@ std::unique_ptr<metacg::Callgraph> metacg::io::VersionTwoMetaCGReader::read() {
   auto generatorVersion = mcgInfo.at("generator").at("version").get<std::string>();
   const MCGGeneratorVersionInfo genVersionInfo{generatorName, metacg::util::getMajorVersionFromString(generatorVersion),
                                                metacg::util::getMinorVersionFromString(generatorVersion), ""};
-  console->info("The metacg (version {}) file was generated with {} (version: {})", mcgVersion, generatorName,
+  metacg::MCGLogger::logInfo("The metacg (version {}) file was generated with {} (version: {})", mcgVersion, generatorName,
                 generatorVersion);
 
   MCGFileInfo fileInfo{ffInfo, genVersionInfo};
   if (!j.contains(ffInfo.cgFieldName) || j.at(ffInfo.cgFieldName).is_null()) {
     const std::string errorMsg = "The call graph in the metacg file was not found or null.";
-    errConsole->error(errorMsg);
+    metacg::MCGLogger::logError(errorMsg);
     throw std::runtime_error(errorMsg);
   }
 

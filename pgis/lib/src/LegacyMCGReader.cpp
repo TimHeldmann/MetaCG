@@ -31,10 +31,10 @@ VersionOneMetaCGReader::FuncMapT::mapped_type& VersionOneMetaCGReader::getOrInse
 void VersionOneMetaCGReader::buildGraph(metacg::graph::MCGManager& cgManager,
                                         VersionOneMetaCGReader::StrStrMap& potentialTargets) {
   const metacg::RuntimeTimer rtt("buildGraph");
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
   // Register nodes in the actual graph
   for (const auto& [k, fi] : functions) {
-    console->trace("Inserting MetaCG node for function {}", k);
+    console.trace("Inserting MetaCG node for function {}", k);
     auto node = cgManager.getCallgraph()->getOrInsertNode(k);  // node pointer currently unused
     assert(node && "node is present in call graph");
     node->setIsVirtual(fi.isVirtual);
@@ -63,7 +63,7 @@ void VersionOneMetaCGReader::buildGraph(metacg::graph::MCGManager& cgManager,
 VersionOneMetaCGReader::StrStrMap VersionOneMetaCGReader::buildVirtualFunctionHierarchy(
     metacg::graph::MCGManager& cgManager) {
   const metacg::RuntimeTimer rtt("buildVirtualFunctionHierarchy");
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
   // Now the functions map holds all the information
   std::unordered_map<std::string, std::unordered_set<std::string>> potentialTargets;
   for (const auto& [k, funcInfo] : functions) {
@@ -95,12 +95,12 @@ VersionOneMetaCGReader::StrStrMap VersionOneMetaCGReader::buildVirtualFunctionHi
 
           const auto fi = functions[next];
           visited.insert(next);
-          console->debug("In while: working on {}", next);
+          console.debug("In while: working on {}", next);
 
           potentialTargets[next].insert(k);
           for (const auto& om : fi.overriddenFunctions) {
             if (visited.find(om) == visited.end()) {
-              console->debug("Adding {} to the list to process", om);
+              console.debug("Adding {} to the list to process", om);
               workQ.push(om);
             }
           }
@@ -114,7 +114,7 @@ VersionOneMetaCGReader::StrStrMap VersionOneMetaCGReader::buildVirtualFunctionHi
     for (const auto& t : s) {
       targets += t + ", ";
     }
-    console->debug("Potential call targets for {}: {}", k, targets);
+    console.debug("Potential call targets for {}: {}", k, targets);
   }
 
   return potentialTargets;
@@ -129,13 +129,13 @@ std::unique_ptr<Callgraph> VersionOneMetaCGReader::read() {
   auto& cgManager = metacg::graph::MCGManager::get();
 
   const metacg::RuntimeTimer rtt("Version One Reader");
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
 
-  console->trace("Reading");
+  console.trace("Reading");
   auto j = source.get();
 
   for (metacg::io::json::iterator it = j.begin(); it != j.end(); ++it) {
-    console->trace("Inserting node for key {}", it.key());
+    console.trace("Inserting node for key {}", it.key());
     auto& fi = getOrInsert(it.key());
 
     /* This is structural and basic information */

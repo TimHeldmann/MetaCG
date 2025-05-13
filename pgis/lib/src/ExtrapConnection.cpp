@@ -25,8 +25,6 @@
 
 namespace extrapconnection {
 void printConfig(ExtrapConfig& cfg) {
-  auto console = metacg::MCGLogger::instance().getConsole();
-
   std::string parameterStr;
   for (const auto& p : cfg.params) {
     parameterStr += '(' + p.first + ", [";
@@ -36,7 +34,7 @@ void printConfig(ExtrapConfig& cfg) {
     }
     parameterStr += "])\n";
   }
-  console->info(
+  metacg::MCGLogger::logInfo(
       "---- Extra-P Config ----\nBaseDir: {}\nRepetitions: {}\nPrefix: {}\nPostfix: {}\nIterations: {}\nParams: "
       "{}\n---- End Extra-P Config ----",
       cfg.directory, cfg.repetitions, cfg.prefix, cfg.postfix, cfg.iteration, parameterStr);
@@ -51,11 +49,11 @@ ExtrapConfig getExtrapConfigFromJSON(const std::filesystem::path& filePath) {
     infile >> j;
   }
 
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
   ExtrapConfig cfg;
   for (json::iterator it = j.begin(); it != j.end(); ++it) {
     auto key = it.key();
-    console->debug("Iterating for {}", key);
+    console.debug("Iterating for {}", key);
 
     if (key == "dir") {
       cfg.directory = it.value().get<std::string>();
@@ -87,22 +85,22 @@ ExtrapConfig getExtrapConfigFromJSON(const std::filesystem::path& filePath) {
         paramValues.reserve(paramStrs.size());
         std::transform(std::begin(paramStrs), std::end(paramStrs), std::back_inserter(paramValues),
                        [&](std::string& s) {
-                         console->debug("Transforming {}", s);
+                         console.debug("Transforming {}", s);
                          return std::stoi(s);
                        });
         cfg.params.emplace_back(paramName, paramValues);
       }
     } else {
-      metacg::MCGLogger::instance().getErrConsole()->warn("This should not happen! Unkown json identifier found.");
+      metacg::MCGLogger::logWarn("This should not happen! Unkown json identifier found.");
     }
     std::reverse(std::begin(cfg.params), std::end(cfg.params));
     for (auto& p : cfg.params) {
-      console->debug("{}", p.first);
+      console.debug("{}", p.first);
     }
   }
 
   // XXX How to have this neat and tidy in a single statement?
-  console->info("Parsed File. Resulting Config:");
+  metacg::MCGLogger::logInfo("Parsed File. Resulting Config:");
   printConfig(cfg);
 
   return cfg;
@@ -148,8 +146,7 @@ void ExtrapModelProvider::buildModels() {
     paramValues.push_back(pv.second);
   }
 
-  auto console = metacg::MCGLogger::instance().getConsole();
-  auto errConsole = metacg::MCGLogger::instance().getErrConsole();
+  auto console = metacg::MCGLogger::instance();
 
   // We always access the previous iteration.
   const std::string finalDir = config.directory + '/' + 'i' + std::to_string(config.iteration - 1);
@@ -161,22 +158,22 @@ void ExtrapModelProvider::buildModels() {
   auto fns = reader.getFileNames(dimensions);
 
   const auto& printDbgInfos = [&]() {
-    console->debug("Dimension: {}", dimensions);
+    console.debug("Dimension: {}", dimensions);
     for (const auto& p : extrapParams) {
-      console->debug("Param: {}", p.getName());
+      console.debug("Param: {}", p.getName());
     }
 
-    console->debug("ParamVals: {}", paramValues.size());
+    console.debug("ParamVals: {}", paramValues.size());
     for (const auto& p : paramValues) {
       for (auto v : p) {
-        console->debug("{}", v);
+        console.debug("{}", v);
       }
     }
     std::string dbgOut("Reading cube files:\n");
     for (const auto& f : fns) {
       dbgOut += "- " + f + "\n";
     }
-    console->debug(dbgOut);
+    console.debug(dbgOut);
   };
 
   // XXX why is that here?
@@ -184,7 +181,7 @@ void ExtrapModelProvider::buildModels() {
 
   for (auto& fn : fns) {
     const auto attEpData = [&](auto& cube, auto cnode, auto n, [[maybe_unused]] auto pnode, [[maybe_unused]] auto pn) {
-      console->debug("Attaching Cube info from file {}", fn);
+      console.debug("Attaching Cube info from file {}", fn);
       auto ptd = n->template getOrCreateMD<pira::PiraTwoData>(ExtrapConnector({}, {}));
       ptd->setExtrapParameters(config.params);
       ptd->addToRuntimeVec(metacg::pgis::impl::time(cube, cnode));
@@ -197,7 +194,7 @@ void ExtrapModelProvider::buildModels() {
 
   for (const auto& elem : metacg::pgis::PiraMCGProcessor::get()) {
     const auto& n = elem.second.get();
-    console->trace("No PiraTwoData meta data");
+    console.trace("No PiraTwoData meta data");
     if (n->has<pira::PiraTwoData>()) {
       auto ptd = metacg::pgis::impl::get<pira::PiraTwoData>(n);
       const auto la = [&]() {
@@ -207,24 +204,24 @@ void ExtrapModelProvider::buildModels() {
         }
         return s;
       };
-      console->debug("ExtrapModelProvider::buildModels: Node {} has {} many runtime values: {}", n->getFunctionName(),
+      console.debug("ExtrapModelProvider::buildModels: Node {} has {} many runtime values: {}", n->getFunctionName(),
                      ptd->getRuntimeVec().size(), la());
     }
   }
 
   try {
-    console->info("Read cubes with Extra-P library");
+    metacg::MCGLogger::logInfo("Read cubes with Extra-P library");
     experiment = reader.readCubeFiles(dimensions);
   } catch (std::exception& e) {
-    errConsole->warn("CubeReader failed with message:\n{}", e.what());
+    metacg::MCGLogger::logWarn("CubeReader failed with message:\n{}", e.what());
   }
 
   if (!experiment) {
-    errConsole->error("No experiment was constructed. Aborting.");
+    metacg::MCGLogger::logError("No experiment was constructed. Aborting.");
     abort();
   }
 
-  console->info("Reading of experiment CUBEs done.");
+  metacg::MCGLogger::logInfo("Reading of experiment CUBEs done.");
 
   /*
    * Notes
@@ -258,23 +255,23 @@ void ExtrapModelProvider::buildModels() {
       if (m->getName() != "time") {
         continue;
       }
-      console->debug("Processing for {}", cp->getRegion()->getName());
+      console.debug("Processing for {}", cp->getRegion()->getName());
       auto functionModels = experiment->getModels(*m, *cp);
 
       for (auto i : functionModels) {
         if (i == nullptr) {
-          errConsole->warn("Function model is NULL");
+          metacg::MCGLogger::logWarn("Function model is NULL");
           assert(false && "the function model should not be nullptr");
           // What happened if it is indeed nullptr?
         }
-        console->debug("{} >>>> {}", cp->getRegion()->getName(), i->getModelFunction()->getAsString(extrapParams));
+        console.debug("{} >>>> {}", cp->getRegion()->getName(), i->getModelFunction()->getAsString(extrapParams));
       }
       auto& elem = models[cp->getRegion()->getName()];
       elem.insert(elem.end(), std::begin(functionModels), std::end(functionModels));
     }
   }
 
-  console->info("Finished model creation.");
+  metacg::MCGLogger::logInfo("Finished model creation.");
 }
 
 void ExtrapConnector::modelAggregation(metacg::pgis::config::ModelAggregationStrategy modelAggregationStrategy) {

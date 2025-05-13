@@ -88,14 +88,14 @@ const auto getName = [](const bool mangled, const auto cn) {
 };
 
 const auto attRuntime = [](auto& cube, auto cnode, auto n, auto pNode, auto pn) {
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
   if (has<BaseProfileData>(n)) {
-    console->debug("Attaching runtime {} to node {}", impl::time(cube, cnode), n->getFunctionName());
+    console.debug("Attaching runtime {} to node {}", impl::time(cube, cnode), n->getFunctionName());
     const auto runtime = impl::time(cube, cnode);
     const auto& bpd = get<BaseProfileData>(n);
     bpd->addRuntime(runtime);
   } else {
-    console->warn("No BaseProfileData found for {}. This should not happen.", n->getFunctionName());
+    metacg::MCGLogger::logWarn("No BaseProfileData found for {}. This should not happen.", n->getFunctionName());
   }
   if (has<PiraOneData>(n)) {
     get<PiraOneData>(n)->setComesFromCube();
@@ -103,15 +103,15 @@ const auto attRuntime = [](auto& cube, auto cnode, auto n, auto pNode, auto pn) 
 };
 
 const auto attNrCall = [](auto& cube, auto cnode, auto n, auto pNode, auto pn) {
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
   if (has<BaseProfileData>(n)) {
-    console->debug("Attaching visits {} to node {}", impl::visits(cube, cnode), n->getFunctionName());
+    console.debug("Attaching visits {} to node {}", impl::visits(cube, cnode), n->getFunctionName());
     const auto calls = impl::visits(cube, cnode);
     const auto& bpd = get<BaseProfileData>(n);
     bpd->addCalls(calls);
     bpd->addNumberOfCallsFrom(pn, calls);
   } else {
-    console->warn("No BaseProfileData found for {}. This should not happen.", n->getFunctionName());
+    metacg::MCGLogger::logWarn("No BaseProfileData found for {}. This should not happen.", n->getFunctionName());
   }
 };
 

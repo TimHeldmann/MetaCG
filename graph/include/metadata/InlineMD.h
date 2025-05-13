@@ -13,9 +13,9 @@ class InlineMD : public metacg::MetaData::Registrar<InlineMD> {
   static constexpr const char* key = "inlineInfo";
   InlineMD() = default;
   explicit InlineMD(const nlohmann::json& j) {
-    metacg::MCGLogger::instance().getConsole()->trace("Reading inlineInfo from json");
+    metacg::MCGLogger::instance().trace("Reading inlineInfo from json");
     if (j.is_null()) {
-      metacg::MCGLogger::instance().getConsole()->trace("Could not retrieve meta data for {}", "inlineInfo");
+      metacg::MCGLogger::instance().trace("Could not retrieve meta data for {}", "inlineInfo");
       return;
     }
     markedInline = j["markedInline"];

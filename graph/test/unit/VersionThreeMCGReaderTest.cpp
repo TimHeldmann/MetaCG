@@ -45,7 +45,7 @@ struct TestMetaDataV3 final : metacg::MetaData::Registrar<TestMetaDataV3> {
 
   void merge(const MetaData& toMerge) final {
     if (std::strcmp(toMerge.getKey(), getKey()) != 0) {
-      metacg::MCGLogger::instance().getErrConsole()->error(
+      metacg::MCGLogger::logError(
           "The MetaData which was tried to merge with TestMetaDataV3 was of a different MetaData type");
       abort();
     }

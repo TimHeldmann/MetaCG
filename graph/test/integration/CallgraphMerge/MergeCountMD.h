@@ -13,9 +13,9 @@ class MergeCountMD : public metacg::MetaData::Registrar<MergeCountMD> {
   static constexpr const char* key = "mergeCount";
   MergeCountMD() = default;
   explicit MergeCountMD(const nlohmann::json& j) {
-    metacg::MCGLogger::instance().getConsole()->trace("Reading MergeCountMD from json");
+    metacg::MCGLogger::instance().trace("Reading MergeCountMD from json");
     if (j.is_null()) {
-      metacg::MCGLogger::instance().getConsole()->trace("Could not retrieve meta data for {}", "MergeCountMD");
+      metacg::MCGLogger::instance().trace("Could not retrieve meta data for {}", "MergeCountMD");
       return;
     }
     auto val = j.get<int>();

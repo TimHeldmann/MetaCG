@@ -36,8 +36,8 @@ class MetaDataFactory {
   template <class... T>
   static CRTPBase* create(const std::string& s, const nlohmann::json& j) {
     if (data().find(s) == data().end()) {
-      MCGLogger::instance().getErrConsole()->warn("Could not create: {}, the Metadata is unknown in you application",
-                                                  s);
+      MCGLogger::logWarnUnique("Could not create: {}, the Metadata is unknown in you application",
+                               s);
       return nullptr;
     }
     return data().at(s)(j);
@@ -48,7 +48,7 @@ class MetaDataFactory {
     friend T;
 
     static bool registerT() {
-      MCGLogger::instance().getConsole()->trace("Registering {} \n", T::key);
+      MCGLogger::instance().trace("Registering {} \n", T::key);
       const auto name = T::key;
       MetaDataFactory::data()[name] = [](const nlohmann::json& j) -> CRTPBase* { return new T(j); };
       return true;
@@ -81,7 +81,7 @@ class MetaDataFactory {
 
     ABICheckedStaticData(int& instanceCtr) {
       if ((++instanceCtr) != 1) {
-        MCGLogger::instance().getErrConsole()->error(
+        MCGLogger::logError(
             "Detected multiple instances of the global metadata registry, likely due to ABI compatibility. Custom "
             "metadata will not work properly. To fix this, ensure that the metadata library is build with the same "
             "compiler as the rest of MetaCG.");

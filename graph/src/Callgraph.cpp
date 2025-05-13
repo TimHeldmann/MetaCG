@@ -38,27 +38,27 @@ size_t Callgraph::insert(CgNodePtr node) {
   const size_t nodeId = node->getId();
   if (auto n = nameIdMap.find(node->getFunctionName()); n != nameIdMap.end()) {
     if (n->first != node->getFunctionName()) {
-      MCGLogger::instance().getErrConsole()->warn(
+      MCGLogger::logWarn(
           "There already exists a mapping from {} to {}, but the newly inserted node {} generates the same ID ({}) "
           "this probably is a hash function collision.",
           n->first, n->second, node->getFunctionName(), node->getId());
       ++nodeHashCollisionCounter;
       if (!empiricalCollisionCounting) {
-        MCGLogger::instance().getErrConsole()->error(
+        MCGLogger::logError(
             "Collisions are treated as errors. Stopping.\nExport METACG_EMPIRICAL_COLLISION_TRACKING=1 to override.");
         abort();
       }
     } else {
-      MCGLogger::instance().getErrConsole()->warn(
-          "A Node with ID {} and name {} allready exists in the Map: Skipping insertion into Map", n->second, n->first);
+      MCGLogger::logWarn(
+          "A Node with ID {} and name {} already exists in the Map: Skipping insertion into Map", n->second, n->first);
     }
   } else {
     nameIdMap.insert({node->getFunctionName(), node->getId()});
   }
   if (auto n = nodes.find(node->getId()); n != nodes.end()) {
-    MCGLogger::instance().getErrConsole()->warn("A Node with ID {} already exists: Skipping insertion",
+    MCGLogger::logWarn("A Node with ID {} already exists: Skipping insertion",
                                                 n->second->getId());
-    MCGLogger::instance().getErrConsole()->warn("The Node will be destroyed.");
+    MCGLogger::logWarn("The Node will be destroyed.");
   } else {
     nodes[nodeId] = std::move(node);
   }
@@ -77,7 +77,7 @@ void Callgraph::clear() {
 
 void Callgraph::addEdge(const CgNode& parentNode, const CgNode& childNode) {
   if (edges.find({parentNode.getId(), childNode.getId()}) != edges.end()) {
-    MCGLogger::instance().getErrConsole()->warn("Edge between {} and {} already exist: Skipping edge insertion",
+    MCGLogger::logWarn("Edge between {} and {} already exist: Skipping edge insertion",
                                                 parentNode.getFunctionName(), childNode.getFunctionName());
     return;
   }
@@ -88,11 +88,11 @@ void Callgraph::addEdge(const CgNode& parentNode, const CgNode& childNode) {
 
 void Callgraph::addEdge(const std::string& parentName, const std::string& childName) {
   if (nameIdMap.find(parentName) == nameIdMap.end()) {
-    MCGLogger::instance().getErrConsole()->warn("Source node: {} does not exist in graph: Inserting Node", parentName);
+    MCGLogger::logWarn("Source node: {} does not exist in graph: Inserting Node", parentName);
     insert(parentName, "unknownOrigin");
   }
   if (nameIdMap.find(childName) == nameIdMap.end()) {
-    MCGLogger::instance().getErrConsole()->warn("Target node: {} does not exist in graph: Inserting Node", childName);
+    MCGLogger::logWarn("Target node: {} does not exist in graph: Inserting Node", childName);
     insert(childName, "unknownOrigin");
   }
   addEdge(nameIdMap[parentName], nameIdMap[childName]);
@@ -100,12 +100,12 @@ void Callgraph::addEdge(const std::string& parentName, const std::string& childN
 
 void Callgraph::addEdge(size_t parentID, size_t childID) {
   if (nodes.find(parentID) == nodes.end()) {
-    MCGLogger::instance().getErrConsole()->error("Source ID {} does not exist in graph: Unrecoverable graph error",
+    MCGLogger::logError("Source ID {} does not exist in graph: Unrecoverable graph error",
                                                  parentID);
     abort();
   }
   if (nodes.find(childID) == nodes.end()) {
-    MCGLogger::instance().getErrConsole()->error("Target ID {} does not exist in graph: Unrecoverable graph error",
+    MCGLogger::logError("Target ID {} does not exist in graph: Unrecoverable graph error",
                                                  childID);
     abort();
   }
@@ -330,11 +330,8 @@ bool Callgraph::hasEdgeMetaData(const std::string& func1, const std::string& fun
 }
 
 void Callgraph::dumpCGStats() const {
-  auto console = MCGLogger::instance().getConsole();
-
-  // TODO: Can we use the FMT stuff that comes with spdlog for the to_string here?
   if (empiricalCollisionCounting) {
-    console->info(" == Callgraph stats == \n");
-    console->info("Node hash collisions: " + std::to_string(nodeHashCollisionCounter));
+    MCGLogger::logInfo(" == Callgraph stats == \n");
+    MCGLogger::logInfo("Node hash collisions: {}", std::to_string(nodeHashCollisionCounter));
   }
 }

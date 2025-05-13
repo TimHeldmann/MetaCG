@@ -40,7 +40,7 @@ using namespace metacg::pgis::options;
 
 static pgis::ErrorCode readFromCubeFile(const std::filesystem::path& cubeFilePath, Config* cfgPtr) {
   if (!std::filesystem::exists(cubeFilePath)) {
-    metacg::MCGLogger::instance().getConsole()->error("Cube file does not exist. (" + cubeFilePath.string() + ")");
+    metacg::MCGLogger::logError("Cube file does not exist. (" + cubeFilePath.string() + ")");
     return pgis::FileDoesNotExist;
   }
 

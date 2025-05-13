@@ -14,7 +14,7 @@ class NumConditionalBranchMD : public metacg::MetaData::Registrar<NumConditional
   NumConditionalBranchMD() = default;
   explicit NumConditionalBranchMD(const nlohmann::json& j) {
     if (j.is_null()) {
-      metacg::MCGLogger::instance().getConsole()->error("Could not retrieve meta data for {}", key);
+      metacg::MCGLogger::logError("Could not retrieve meta data for {}", key);
       return;
     }
     int numberOfConditionalBranches = j.get<int>();

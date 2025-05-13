@@ -76,7 +76,7 @@ Statements visitNodeForInclusiveStatements(metacg::CgNode* node, CgNodeRawPtrUSe
 
   node->getOrCreateMD<LoadImbalance::LIMetaData>()->setNumberOfInclusiveStatements(inclusiveStatements);
 
-  metacg::MCGLogger::instance().getConsole()->trace("Visiting node " + node->getFunctionName() +
+  metacg::MCGLogger::instance().trace("Visiting node " + node->getFunctionName() +
                                                     ". Result = " + std::to_string(inclusiveStatements));
   return inclusiveStatements;
 }
@@ -84,7 +84,7 @@ Statements visitNodeForInclusiveStatements(metacg::CgNode* node, CgNodeRawPtrUSe
 void calculateInclusiveStatementCounts(metacg::CgNode* mainNode, const metacg::Callgraph* const graph) {
   CgNodeRawPtrUSet visitedNodes;
 
-  metacg::MCGLogger::instance().getConsole()->trace("Starting inclusive statement counting. mainNode = " +
+  metacg::MCGLogger::instance().trace("Starting inclusive statement counting. mainNode = " +
                                                     mainNode->getFunctionName());
 
   visitNodeForInclusiveStatements(mainNode, &visitedNodes, graph);
@@ -186,7 +186,7 @@ double calcRuntimeThreshold(const Callgraph& cg, bool useLongAsRef) {
     const auto& n = elem.second.get();
     const auto& [hasBPD, bpd] = n->checkAndGet<BaseProfileData>();
     if (hasBPD) {
-      metacg::MCGLogger::instance().getConsole()->trace(
+      metacg::MCGLogger::instance().trace(
           "Found BaseProfileData for {}: Adding inclusive runtime of {} to RT vector.", n->getFunctionName(),
           bpd->getInclusiveRuntimeInSeconds());
       if (bpd->getInclusiveRuntimeInSeconds() != 0) {
@@ -194,13 +194,13 @@ double calcRuntimeThreshold(const Callgraph& cg, bool useLongAsRef) {
       }
     }
   }
-  metacg::MCGLogger::instance().getConsole()->info("The number of elements for runtime threshold calculation: {}",
+  metacg::MCGLogger::logInfo("The number of elements for runtime threshold calculation: {}",
                                                    rt.size());
 
   if (rt.empty()) {
     const char* errorMsg =
         "There was no function with runtime data found in profile, so we are unable to compute a runtime threshold.";
-    metacg::MCGLogger::instance().getErrConsole()->error(errorMsg);
+    metacg::MCGLogger::logError(errorMsg);
     throw std::runtime_error(errorMsg);
   }
 
@@ -210,7 +210,7 @@ double calcRuntimeThreshold(const Callgraph& cg, bool useLongAsRef) {
     for (const auto r : rt) {
       runtimeStr += ' ' + std::to_string(r);
     }
-    metacg::MCGLogger::instance().getConsole()->debug("Runtime vector [values are seconds]: {}", runtimeStr);
+    metacg::MCGLogger::instance().debug("Runtime vector [values are seconds]: {}", runtimeStr);
   }
 
   size_t lastIndex = rt.size() >> 1;

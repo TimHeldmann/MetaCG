@@ -56,7 +56,7 @@ void LIEstimatorPhase::modifyGraph(metacg::CgNode* mainMethod) {
 
     if (n->getOrCreateMD<pira::PiraOneData>()->comesFromCube() &&
         !n->getOrCreateMD<LIMetaData>()->isFlagged(FlagType::Irrelevant)) {
-      metacg::MCGLogger::instance().getConsole()->debug("LIEstimatorPhase: Processing node " + n->getFunctionName());
+      metacg::MCGLogger::instance().debug("LIEstimatorPhase: Processing node " + n->getFunctionName());
 
       // flag node as visited
       n->getOrCreateMD<LIMetaData>()->flag(FlagType::Visited);
@@ -116,7 +116,7 @@ void LIEstimatorPhase::modifyGraph(metacg::CgNode* mainMethod) {
         // mark as irrelevant
         n->getOrCreateMD<LIMetaData>()->flag(FlagType::Irrelevant);
       }
-      metacg::MCGLogger::instance().getConsole()->debug(debugString.str());
+      metacg::MCGLogger::instance().debug(debugString.str());
     }
   }
 
@@ -140,7 +140,7 @@ void LIEstimatorPhase::modifyGraph(metacg::CgNode* mainMethod) {
                     << " sec.";
     imbalancedNames << "\n";
   }
-  metacg::MCGLogger::instance().getConsole()->info("Load imbalance summary: " + imbalancedNames.str());
+  metacg::MCGLogger::logInfo("Load imbalance summary: " + imbalancedNames.str());
 }
 
 void LIEstimatorPhase::instrumentRelevantChildren(metacg::CgNode* node, pira::Statements statementThreshold,
@@ -285,7 +285,7 @@ void LIEstimatorPhase::findSyncPoints(CgNode* node) {
     }
   }
 
-  metacg::MCGLogger::instance().getConsole()->debug(debugString.str());
+  metacg::MCGLogger::instance().debug(debugString.str());
 }
 
 void LIEstimatorPhase::instrumentByPattern(CgNode* startNode, const std::function<bool(CgNode*)>& pattern,

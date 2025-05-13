@@ -21,7 +21,7 @@ void WLInstrEstimatorPhase::init() {
 
   std::ifstream ifStream(wlFilePath);
   if (!ifStream.good()) {
-    metacg::MCGLogger::instance().getErrConsole()->error("Unable to open Wl file {}", wlFilePath.string());
+    metacg::MCGLogger::logError("Unable to open Wl file {}", wlFilePath.string());
     exit(metacg::pgis::ErrorCode::FileDoesNotExist);
   }
 

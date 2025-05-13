@@ -253,7 +253,7 @@ class RuntimeEstimatorPhase : public EstimatorPhase {
     assert(bl.empty());
     if (isLikelyInlined) {
       // TODO: Maybe special handling for trait classes
-      metacg::MCGLogger::instance().getConsole()->debug("Applying inline factor of {} for node {}", inlineFactor,
+      metacg::MCGLogger::instance().debug("Applying inline factor of {} for node {}", inlineFactor,
                                                         node->getFunctionName());
       result *= inlineFactor;
     }

@@ -22,7 +22,7 @@ class InstrumentationMetaData : public metacg::MetaData::Registrar<Instrumentati
   static constexpr const char* key = "InstrumentationMetaData";
   InstrumentationMetaData() : state(InstrumentationState::None) {}
   InstrumentationMetaData(const nlohmann::json& j) : state(InstrumentationState::None) {
-    metacg::MCGLogger::instance().getConsole()->warn("This constructor is not supposed to be called");
+    metacg::MCGLogger::logWarn("This constructor is not supposed to be called");
   }
 
  private:
@@ -30,7 +30,7 @@ class InstrumentationMetaData : public metacg::MetaData::Registrar<Instrumentati
 
  public:
   nlohmann::json to_json() const final {
-    metacg::MCGLogger::instance().getConsole()->trace("Serializing InstrumentationMetaData to json is not implemented");
+    metacg::MCGLogger::instance().trace("Serializing InstrumentationMetaData to json is not implemented");
     return {};
   };
 
@@ -38,12 +38,12 @@ class InstrumentationMetaData : public metacg::MetaData::Registrar<Instrumentati
 
   void merge(const MetaData& toMerge) final {
     if (std::strcmp(toMerge.getKey(), getKey()) != 0) {
-      metacg::MCGLogger::instance().getErrConsole()->error(
+      metacg::MCGLogger::logError(
           "The MetaData which was tried to merge with InstrumentationMetaData was of a different MetaData type");
       abort();
     }
 
-    metacg::MCGLogger::instance().getErrConsole()->warn(
+    metacg::MCGLogger::logWarn(
         "InstrumentationMetaData should be written into a fully merged graph directly.");
 
   }

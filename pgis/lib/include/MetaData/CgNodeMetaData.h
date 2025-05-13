@@ -46,9 +46,9 @@ public:
  static constexpr const char* key = "BaseProfileData";
  BaseProfileData() = default;
  BaseProfileData(const nlohmann::json& j) {
-   metacg::MCGLogger::instance().getConsole()->trace("Running BaseProfileDataHandler::read");
+   metacg::MCGLogger::instance().trace("Running BaseProfileDataHandler::read");
    if (j.is_null()) {
-     metacg::MCGLogger::instance().getConsole()->error("Could not retrieve metadata for {}", key);
+     metacg::MCGLogger::logError("Could not retrieve metadata for {}", key);
      return;
    }
    auto jsonNumCalls = j["numCalls"].get<unsigned long long int>();
@@ -79,7 +79,7 @@ public:
 
  void merge(const MetaData& toMerge) final {
    if (std::strcmp(toMerge.getKey(), getKey()) != 0) {
-     metacg::MCGLogger::instance().getErrConsole()->error(
+     metacg::MCGLogger::logError(
          "The MetaData which was tried to merge with BaseProfileData was of a different MetaData type");
      abort();
    }
@@ -91,7 +91,7 @@ public:
    inclTimeInSeconds = std::max(toMergeDerived->getInclusiveRuntimeInSeconds(), inclTimeInSeconds);
    // cgLoc.insert(cgLoc.end(), toMergeDerived->getCgLocation().begin(), toMergeDerived->getCgLocation().end());
 
-   metacg::MCGLogger::instance().getErrConsole()->warn("BaseProfileData should be written into fully merged graph.");
+   metacg::MCGLogger::logWarn("BaseProfileData should be written into fully merged graph.");
  }
 
  MetaData* clone() const final { return new BaseProfileData(*this); }
@@ -174,13 +174,13 @@ public:
  static constexpr const char* key = "numStatements";
  PiraOneData() = default;
  explicit PiraOneData(const nlohmann::json& j) {
-   metacg::MCGLogger::instance().getConsole()->trace("Running PiraOneMetaDataRetriever::read from json");
+   metacg::MCGLogger::instance().trace("Running PiraOneMetaDataRetriever::read from json");
    if (j.is_null()) {
-     metacg::MCGLogger::instance().getConsole()->error("Could not retrieve meta data for {}", key);
+     metacg::MCGLogger::logError("Could not retrieve meta data for {}", key);
      return;
    }
    auto jsonNumStmts = j.get<long long int>();
-   metacg::MCGLogger::instance().getConsole()->debug("Read {} stmts from file", jsonNumStmts);
+   metacg::MCGLogger::instance().debug("Read {} stmts from file", jsonNumStmts);
    setNumberOfStatements(jsonNumStmts);
  }
 
@@ -198,7 +198,7 @@ public:
 
  void merge(const MetaData& toMerge) final {
    if (std::strcmp(toMerge.getKey(), getKey()) != 0) {
-     metacg::MCGLogger::instance().getErrConsole()->error(
+     metacg::MCGLogger::logError(
          "The MetaData which was tried to merge with PiraOneData was of a different MetaData type");
      abort();
    }
@@ -208,7 +208,7 @@ public:
      numStmts += toMergeDerived->getNumberOfStatements();
 
      if (numStmts != 0 && toMergeDerived->getNumberOfStatements() != 0) {
-       metacg::MCGLogger::instance().getErrConsole()->warn(
+       metacg::MCGLogger::logWarn(
            "Same function defined with different number of statements found on merge.");
      }
    }
