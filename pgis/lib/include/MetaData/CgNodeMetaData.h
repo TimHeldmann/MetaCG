@@ -261,20 +261,20 @@ public:
 
  explicit PiraTwoData() : epCon({}, {}), params(), rtVec(), numReps(0) {}
  explicit PiraTwoData(const nlohmann::json& j) : epCon({}, {}), params(), rtVec(), numReps(0) {
-   metacg::MCGLogger::instance().getConsole()->warn(
+   metacg::MCGLogger::logWarn(
        "Read PiraTwoData from json currently not implemented / supported");
  };
  explicit PiraTwoData(const extrapconnection::ExtrapConnector& ec) : epCon(ec), params(), rtVec(), numReps(0) {}
  PiraTwoData(const PiraTwoData& other)
      : epCon(other.epCon), params(other.params), rtVec(other.rtVec), numReps(other.numReps) {
-   metacg::MCGLogger::instance().getConsole()->trace("PiraTwo Copy CTor\n\tother: {}\n\tThis: {}", other.rtVec.size(),
+   metacg::MCGLogger::instance().trace("PiraTwo Copy CTor\n\tother: {}\n\tThis: {}", other.rtVec.size(),
                                                      rtVec.size());
  }
 
  nlohmann::json to_json() const final {
    nlohmann::json j;
    if (getExtrapModel() == nullptr) {
-     metacg::MCGLogger::instance().getConsole()->error(
+     metacg::MCGLogger::logError(
          "PiraTwoData can not be exported, no connected ExtraP model exists");
      return j;
    }
@@ -295,7 +295,7 @@ public:
    } else {
      j = nlohmann::json{{"experiments", experiments}};
    }
-   metacg::MCGLogger::instance().getConsole()->debug("PiraTwoData to_json:\n{}", j.dump());
+   metacg::MCGLogger::instance().debug("PiraTwoData to_json:\n{}", j.dump());
    return j;
  };
 
@@ -303,11 +303,11 @@ public:
 
  void merge(const MetaData& toMerge) final {
    if (std::strcmp(toMerge.getKey(), getKey()) != 0) {
-     metacg::MCGLogger::instance().getErrConsole()->error(
+     metacg::MCGLogger::logError(
          "The MetaData which was tried to merge with PiraTwoData was of a different MetaData type");
      abort();
    }
-   metacg::MCGLogger::instance().getErrConsole()->warn("PiraTwoData should be written into fully merged graph.");
+   metacg::MCGLogger::logWarn("PiraTwoData should be written into fully merged graph.");
  }
 
  MetaData* clone() const final { return new PiraTwoData(*this); }
@@ -341,7 +341,7 @@ public:
  FilePropertiesMetaData() : origin("INVALID"), fromSystemInclude(false), lineNumber(0) {}
  explicit FilePropertiesMetaData(const nlohmann::json& j) {
    if (j.is_null()) {
-     metacg::MCGLogger::instance().getConsole()->error("Could not retrieve meta data for {}", key);
+     metacg::MCGLogger::logWarn("Could not retrieve meta data for {}", key);
      return;
    }
 
@@ -367,7 +367,7 @@ public:
 
  void merge(const MetaData& toMerge) final {
    if (std::strcmp(toMerge.getKey(), getKey()) != 0) {
-     metacg::MCGLogger::instance().getErrConsole()->error(
+     metacg::MCGLogger::logError(
          "The MetaData which was tried to merge with FilePropertiesMetaData was of a different MetaData type");
      abort();
    }
@@ -387,7 +387,7 @@ public:
  InlineMetaData() = default;
  explicit InlineMetaData(const nlohmann::json& j) {
    if (j.is_null()) {
-     metacg::MCGLogger::instance().getConsole()->error("Could not retrieve meta data for {}", key);
+     metacg::MCGLogger::logWarn("Could not retrieve meta data for {}", key);
      return;
    }
    markedInline = j["markedInline"].get<bool>();
@@ -415,8 +415,7 @@ public:
 
  void merge(const MetaData& toMerge) final {
    if (std::strcmp(toMerge.getKey(), getKey()) != 0) {
-     metacg::MCGLogger::instance().getErrConsole()->error(
-         "The MetaData which was tried to merge with InlineMetaData was of a different MetaData type");
+     metacg::MCGLogger::logError("The MetaData which was tried to merge with InlineMetaData was of a different MetaData type");
      abort();
    }
    const InlineMetaData* toMergeDerived = static_cast<const InlineMetaData*>(&toMerge);
@@ -453,7 +452,7 @@ public:
  CallCountEstimationMetaData() = default;
  explicit CallCountEstimationMetaData(const nlohmann::json& j) {
    if (j.is_null()) {
-     metacg::MCGLogger::instance().getConsole()->error("Could not retrieve meta data for {}", key);
+     metacg::MCGLogger::logWarn("Could not retrieve meta data for {}", key);
      return;
    }
    calledFunctions = j["calls"].get<pira::CalledFunctionType>();
@@ -474,7 +473,7 @@ public:
 
  void merge(const MetaData& toMerge) final {
    if (std::strcmp(toMerge.getKey(), getKey()) != 0) {
-     metacg::MCGLogger::instance().getErrConsole()->error(
+     metacg::MCGLogger::logError(
          "The MetaData which was tried to merge with CallCountEstimationMetaData was of a different MetaData type");
      abort();
    }
@@ -560,12 +559,12 @@ public:
 
  void merge(const MetaData& toMerge) final {
    if (std::strcmp(toMerge.getKey(), getKey()) != 0) {
-     metacg::MCGLogger::instance().getErrConsole()->error(
+     metacg::MCGLogger::logError(
          "The MetaData which was tried to merge with TemporaryInstrumentationDecisionMetadata was of a different "
          "MetaData type");
      abort();
    }
-   metacg::MCGLogger::instance().getErrConsole()->warn(
+   metacg::MCGLogger::logWarn(
        "TemporaryInstrumentationDecisionMetadata can not be merged, as it only pertains to temporary data.");
  }
 
@@ -587,7 +586,7 @@ public:
  InstrumentationResultMetaData() = default;
  explicit InstrumentationResultMetaData(const nlohmann::json& j) {
    if (j.is_null()) {
-     metacg::MCGLogger::instance().getConsole()->error("Could not retrieve meta data for {}", key);
+     metacg::MCGLogger::logWarn("Could not retrieve meta data for {}", key);
      return;
    }
    callCount = j["calls"];
@@ -633,12 +632,12 @@ public:
 
  void merge(const MetaData& toMerge) final {
    if (std::strcmp(toMerge.getKey(), getKey()) != 0) {
-     metacg::MCGLogger::instance().getErrConsole()->error(
+     metacg::MCGLogger::logError(
          "The MetaData which was tried to merge with InstrumentationResultMetaData was of a different MetaData type");
      abort();
    }
 
-   metacg::MCGLogger::instance().getErrConsole()->warn(
+   metacg::MCGLogger::logWarn(
        "InstrumentationResultMetaData can not be merged and should be written into a fully merged callgraph.");
  }
 

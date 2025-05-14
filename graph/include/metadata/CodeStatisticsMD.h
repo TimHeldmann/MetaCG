@@ -14,7 +14,7 @@ class CodeStatisticsMD : public metacg::MetaData::Registrar<CodeStatisticsMD> {
   CodeStatisticsMD() = default;
   explicit CodeStatisticsMD(const nlohmann::json& j) {
     if (j.is_null()) {
-      metacg::MCGLogger::instance().getConsole()->error("Could not retrieve meta data for {}", key);
+      metacg::MCGLogger::instance().logWarn("Could not retrieve meta data for {}", key);
       return;
     }
     int jNumVars = j["numVars"].get<int>();

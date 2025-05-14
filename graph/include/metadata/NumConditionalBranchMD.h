@@ -39,7 +39,7 @@ class NumConditionalBranchMD : public metacg::MetaData::Registrar<NumConditional
       numConditionalBranches += toMergeDerived->numConditionalBranches;
 
       if (numConditionalBranches != 0 && toMergeDerived->numConditionalBranches != 0) {
-        metacg::MCGLogger::instance().getErrConsole()->warn(
+        metacg::MCGLogger::logWarn(
             "Same function defined with different number of conditional branches found on merge.");
       }
     }

@@ -55,9 +55,9 @@ class MCGLogger {
       return;
     }
     if constexpr (outPutType == Output::StdConsole) {
-      getConsole()->info(formattedMessage);
+      console->info(formattedMessage);
     } else if constexpr (outPutType == Output::ErrConsole) {
-      getErrConsole()->info(formattedMessage);
+      errconsole->info(formattedMessage);
     }
   }
 
@@ -78,9 +78,9 @@ class MCGLogger {
       return;
     }
     if constexpr (outPutType == Output::StdConsole) {
-      getConsole()->error(formattedMessage);
+      console->error(formattedMessage);
     } else if constexpr (outPutType == Output::ErrConsole) {
-      getErrConsole()->error(formattedMessage);
+      errconsole->error(formattedMessage);
     }
   }
 
@@ -101,9 +101,9 @@ class MCGLogger {
       return;
     }
     if constexpr (outPutType == Output::StdConsole) {
-      getConsole()->debug(formattedMessage);
+      console->debug(formattedMessage);
     } else if constexpr (outPutType == Output::ErrConsole) {
-      getErrConsole()->debug(formattedMessage);
+      errconsole->debug(formattedMessage);
     }
   }
 
@@ -124,9 +124,9 @@ class MCGLogger {
       return;
     }
     if constexpr (outPutType == Output::StdConsole) {
-      getConsole()->warn(formattedMessage);
+      console->warn(formattedMessage);
     } else if constexpr (outPutType == Output::ErrConsole) {
-      getErrConsole()->warn(formattedMessage);
+      errconsole->warn(formattedMessage);
     }
   }
 
@@ -147,9 +147,9 @@ class MCGLogger {
       return;
     }
     if constexpr (outPutType == Output::StdConsole) {
-      getConsole()->critical(formattedMessage);
+      console->critical(formattedMessage);
     } else if constexpr (outPutType == Output::ErrConsole) {
-      getErrConsole()->critical(formattedMessage);
+      errconsole->critical(formattedMessage);
     }
   }
 
@@ -170,9 +170,9 @@ class MCGLogger {
       return;
     }
     if constexpr (outPutType == Output::StdConsole) {
-      getConsole()->trace(formattedMessage);
+      console->trace(formattedMessage);
     } else if constexpr (outPutType == Output::ErrConsole) {
-      getErrConsole()->trace(formattedMessage);
+      errconsole->trace(formattedMessage);
     }
   }
 

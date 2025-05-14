@@ -15,7 +15,7 @@ class LoopDepthMD : public metacg::MetaData::Registrar<LoopDepthMD> {
   LoopDepthMD() = default;
   explicit LoopDepthMD(const nlohmann::json& j) {
     if (j.is_null()) {
-      metacg::MCGLogger::instance().getConsole()->error("Could not retrieve meta data for {}", key);
+      metacg::MCGLogger::instance().logWarn("Could not retrieve meta data for {}", key);
       return;
     }
     loopDepth = j.get<int>();
@@ -49,7 +49,7 @@ class GlobalLoopDepthMD : public metacg::MetaData::Registrar<GlobalLoopDepthMD> 
 
   explicit GlobalLoopDepthMD(const nlohmann::json& j) {
     if (j.is_null()) {
-      metacg::MCGLogger::instance().getConsole()->error("Could not retrieve meta data for {}", key);
+      metacg::MCGLogger::instance().logWarn("Could not retrieve meta data for {}", key);
       return;
     }
     globalLoopDepth = j.get<int>();
@@ -87,9 +87,9 @@ class LoopCallDepthMD : public metacg::MetaData::Registrar<LoopCallDepthMD> {
   static constexpr const char* key = "loopCallDepth";
   LoopCallDepthMD() = default;
   explicit LoopCallDepthMD(const nlohmann::json& j) {
-    metacg::MCGLogger::instance().getConsole()->trace("Running LoopCallDepthHandler::read from json");
+    metacg::MCGLogger::instance().trace("Running LoopCallDepthHandler::read from json");
     if (j.is_null()) {
-      metacg::MCGLogger::instance().getConsole()->error("Could not retrieve meta data for {}", key);
+      metacg::MCGLogger::logWarn("Could not retrieve meta data for {}", key);
       return;
     }
 

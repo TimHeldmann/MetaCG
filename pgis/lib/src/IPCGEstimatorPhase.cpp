@@ -60,21 +60,21 @@ StatementCountEstimatorPhase::~StatementCountEstimatorPhase() = default;
 
 void StatementCountEstimatorPhase::modifyGraph(metacg::CgNode* mainMethod) {
   metacg::analysis::ReachabilityAnalysis ra(graph);
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
 
   if (pSEP) {
     numberOfStatementsThreshold = pSEP->getCuttoffNumInclStmts();
-    console->debug("Changed count: now using {} as threshold", numberOfStatementsThreshold);
+    console.debug("Changed count: now using {} as threshold", numberOfStatementsThreshold);
   }
 
   for (const auto& elem : graph->getNodes()) {
     const auto& node = elem.second.get();
-    console->trace("Processing node: {}", node->getFunctionName());
+    console.trace("Processing node: {}", node->getFunctionName());
     if (!ra.isReachableFromMain(node)) {
-      console->trace("\tskipping.");
+      console.trace("\tskipping.");
       continue;
     }
-    console->trace("\testimating.");
+    console.trace("\testimating.");
     estimateStatementCount(node, ra);
   }
 }
@@ -110,16 +110,16 @@ void StatementCountEstimatorPhase::estimateStatementCount(metacg::CgNode* startN
     inclStmtCount = snPOD->getNumberOfStatements();
   }
 
-  auto console = metacg::MCGLogger::instance().getConsole();
-  console->trace("Function: {} >> InclStatementCount: {}", startNode->getFunctionName(), inclStmtCount);
+  auto console = metacg::MCGLogger::instance();
+  console.trace("Function: {} >> InclStatementCount: {}", startNode->getFunctionName(), inclStmtCount);
   if (inclStmtCount >= numberOfStatementsThreshold) {
-    console->trace("Function {} added to instrumentation list", startNode->getFunctionName());
+    console.trace("Function {} added to instrumentation list", startNode->getFunctionName());
     pgis::instrumentNode(startNode);
   }
   auto useCSInstr = pgis::config::GlobalConfig::get().getAs<bool>(pgis::options::useCallSiteInstrumentation.cliName);
   if (useCSInstr && /*!startNode->get<PiraOneData>()->getHasBody()*/ !startNode->getHasBody() &&
       startNode->get<BaseProfileData>()->getRuntimeInSeconds() == .0) {
-    console->trace("Function {} added to instrumentation path", startNode->getFunctionName());
+    console.trace("Function {} added to instrumentation path", startNode->getFunctionName());
     pgis::instrumentPathNode(startNode);
   }
 }
@@ -156,7 +156,7 @@ RuntimeEstimatorPhase::RuntimeEstimatorPhase(metacg::Callgraph* cg, double runTi
       // Cap the overhead to prevent massive overshooting
       relativeOverhead = 10;
     }
-    metacg::MCGLogger::instance().getConsole()->info("targetOverheadScaled: {}, prevOverheadScaled: {}",
+    metacg::MCGLogger::logInfo("targetOverheadScaled: {}, prevOverheadScaled: {}",
                                                      targetOverheadScaled, prevOverheadScaled);
   }
 }
@@ -177,7 +177,7 @@ void RuntimeEstimatorPhase::modifyGraph(metacg::CgNode* mainMethod) {
   }
 
   runTimeThreshold = CgHelper::calcRuntimeThreshold(*graph, true);
-  metacg::MCGLogger::instance().getConsole()->debug("The runtime is threshold is computed as: {}", runTimeThreshold);
+  metacg::MCGLogger::instance().debug("The runtime is threshold is computed as: {}", runTimeThreshold);
 
   // The main method is always in the dominant runtime path
   mainMethod->getOrCreateMD<PiraOneData>()->setDominantRuntime();
@@ -225,16 +225,16 @@ void RuntimeEstimatorPhase::estimateRuntime(metacg::CgNode* startNode) {
 }
 
 void RuntimeEstimatorPhase::doInstrumentation(metacg::CgNode* startNode, metacg::analysis::ReachabilityAnalysis& ra) {
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
   auto runTime = inclRunTime[startNode];
-  console->debug("Processing {}:\n\tNode RT:\t{}\n\tCalced RT:\t{}\n\tThreshold:\t{}", startNode->getFunctionName(),
+  console.debug("Processing {}:\n\tNode RT:\t{}\n\tCalced RT:\t{}\n\tThreshold:\t{}", startNode->getFunctionName(),
                  startNode->get<BaseProfileData>()->getInclusiveRuntimeInSeconds(), runTime, runTimeThreshold);
   if (pgis::config::getSelectedOverheadAlgorithm() != pgis::options::OverheadSelection::OverheadSelectionEnum::None) {
     // Add new nodes according to
   } else if (runTime >= runTimeThreshold) {
     // keep the nodes on the paths in the profile, when they expose sufficient runtime.
     pgis::instrumentNode(startNode);
-    console->info("Instrumenting {} because of its runtime", startNode->getFunctionName());
+    MCGLogger::logInfo("Instrumenting {} because of its runtime", startNode->getFunctionName());
     int instrChildren = 0;
 
     std::map<metacg::CgNode*, long int> childStmts;
@@ -275,7 +275,7 @@ void RuntimeEstimatorPhase::doInstrumentation(metacg::CgNode* startNode, metacg:
     }
 
     if (maxRtChild) {
-      console->debug("The principal node set to {}", maxRtChild->getFunctionName());
+      console.debug("The principal node set to {}", maxRtChild->getFunctionName());
     }
 
     // XXX Original PIRA I value
@@ -296,24 +296,24 @@ void RuntimeEstimatorPhase::doInstrumentation(metacg::CgNode* startNode, metacg:
     long int stmtThreshold;
     if (numChildren > 0) {
       stmtThreshold = (maxStmts / numChildren) * alpha;
-      console->debug("=== Children Info for {} ===\n\tMax Stmts:\t{}\n\tNum Children:\t{}\n\tStmt Threshold:\t{}",
+      console.debug("=== Children Info for {} ===\n\tMax Stmts:\t{}\n\tNum Children:\t{}\n\tStmt Threshold:\t{}",
                      startNode->getFunctionName(), maxStmts, numChildren, stmtThreshold);
     } else {
       stmtThreshold = 1;
     }
 
-    console->trace(
+    console.trace(
         ">>> Algorithm Infos <<<\n\tRuntime:\t{}\n\tMax Stmts:\t{}\n\tAlpha:\t\t{}\n\tTotal Stmts:\t{}\n\tStmt "
         "Threshold:\t{}\n\tInstr Children:\t{}\n",
         runTime, maxStmts, alpha, totStmts, stmtThreshold, instrChildren);
 
     if (stmtThreshold < 1) {
       // This can happen, if all leaves are std lib functions.
-      console->debug("Statement Threshold < 1: Returning");
+      console.debug("Statement Threshold < 1: Returning");
       return;
     }
     if (maxRtChild) {
-      console->debug("This is the dominant runtime path");
+      console.debug("This is the dominant runtime path");
       pgis::instrumentNode(maxRtChild);
       maxRtChild->getOrCreateMD<PiraOneData>()->setDominantRuntime();
     } else {
@@ -321,7 +321,7 @@ void RuntimeEstimatorPhase::doInstrumentation(metacg::CgNode* startNode, metacg:
       if (startNode->getOrCreateMD<PiraOneData>()->isDominantRuntime()) {
         spdlog::get("console")->debug("\tPrincipal: {}", startNode->getFunctionName());
         for (auto child : graph->getCallees(startNode)) {
-          console->trace("\tEvaluating {} with {} [stmt threshold: {}]", child->getFunctionName(), childStmts[child],
+          console.trace("\tEvaluating {} with {} [stmt threshold: {}]", child->getFunctionName(), childStmts[child],
                          stmtThreshold);
           if (childStmts[child] > stmtThreshold) {
             pgis::instrumentNode(child);
@@ -330,7 +330,7 @@ void RuntimeEstimatorPhase::doInstrumentation(metacg::CgNode* startNode, metacg:
         }
       }
     }
-    console->debug(
+    console.debug(
         "End of Processing {}:\n\tRuntime:\t{}\n\tMax Stmts:\t{}\n\tAlpha:\t\t{}\n\tTotal Stmt:\t{}\n\tStmt "
         "Threshold:\t{}\n\tInstr Children:\t{}",
         startNode->getFunctionName(), runTime, maxStmts, alpha, totStmts, stmtThreshold, instrChildren);
@@ -431,7 +431,7 @@ void RuntimeEstimatorPhase::modifyGraphOverhead(metacg::CgNode* mainMethod) {
   const double callsToKick = totalExclusiveCalls - callsToKeep >= 1 ? totalExclusiveCalls - callsToKeep : 0;
   assert(totalAllowedCalls > 0);
 
-  metacg::MCGLogger::instance().getConsole()->info(
+  metacg::MCGLogger::logInfo(
       "Total calls: {} relative overhead: {} allowed calls: {} calls to kick: {} calls to keep: {}",
       totalExclusiveCalls, relativeOverhead, totalAllowedCalls, callsToKick, callsToKeep);
 
@@ -459,7 +459,7 @@ void RuntimeEstimatorPhase::modifyGraphOverhead(metacg::CgNode* mainMethod) {
   for (const auto& elem : graph->getNodes()) {
     const auto& node = elem.second.get();
     if (pgis::isAnyInstrumented(node)) {
-      metacg::MCGLogger::instance().getConsole()->debug("Node left after kicking: {}", node->getFunctionName());
+      metacg::MCGLogger::instance().debug("Node left after kicking: {}", node->getFunctionName());
     }
   }
 
@@ -537,7 +537,7 @@ void RuntimeEstimatorPhase::modifyGraphOverhead(metacg::CgNode* mainMethod) {
     }
   }
 
-  metacg::MCGLogger::instance().getConsole()->info(
+  metacg::MCGLogger::logInfo(
       "Total allowed calls: {}, prevUsedCalls: {}, kicked: {}, usedBudget: {}", totalAllowedCalls, totalExclusiveCalls,
       kicked, usedBudget);
   // Cleanup:
@@ -565,12 +565,12 @@ double RuntimeEstimatorPhase::kickNodesByRuntimePerCall(const CgNode* mainMethod
 
     kickNodesFromInstrumentation(mainMethod, nodesSortedByRuntimePerCallNoHotspot, callsToKick, kicked);
     if (kicked < callsToKick) {
-      metacg::MCGLogger::instance().getConsole()->warn(
+      metacg::MCGLogger::logWarn(
           "Could not kick enough non-hotspot nodes from the instrumentation. Starting kicking of potential "
           "hotspots...");
       kickNodesFromInstrumentation(mainMethod, nodesSortedByRuntimePerCallHotspot, callsToKick, kicked);
       if (kicked < callsToKick || mainMethod->get<TemporaryInstrumentationDecisionMetadata>()->isKicked) {
-        metacg::MCGLogger::instance().getConsole()->error(
+        metacg::MCGLogger::logError(
             "Could not achieve overhead goal even after kicking all nodes");
         exit(-1);
       }
@@ -594,10 +594,10 @@ void RuntimeEstimatorPhase::kickNodesFromInstrumentation(const CgNode* mainMetho
 
 std::pair<std::vector<CgNode*>, double> RuntimeEstimatorPhase::getNodesToInstrumentGreedyKnapsackOverhead(
     const std::set<CgNode*, NodeProfitComparator>& nodes, double costLimit) {
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
   {
     // Debug code
-    console->debug("Budget: {}", costLimit);
+    console.debug("Budget: {}", costLimit);
     struct CallEstimator {
       bool operator()(const metacg::CgNode* lhs, const metacg::CgNode* rhs) const {
         const auto lhsCalls = getCallsToNode(lhs);
@@ -610,7 +610,7 @@ std::pair<std::vector<CgNode*>, double> RuntimeEstimatorPhase::getNodesToInstrum
       callEstimatorSet.insert(node);
     }
     for (const auto& call : callEstimatorSet) {
-      console->debug("Call estimate for node {}: {}", call->getFunctionName(), getCallsToNode(call));
+      console.debug("Call estimate for node {}: {}", call->getFunctionName(), getCallsToNode(call));
     }
     // End debug code
   }
@@ -636,12 +636,12 @@ std::pair<std::vector<CgNode*>, double> RuntimeEstimatorPhase::getNodesToInstrum
   if (maxProfitNode && std::find(ret.begin(), ret.end(), maxProfitNode) == ret.end()) {
     ret.clear();
     ret.push_back(maxProfitNode);
-    console->debug("Adding node {}", maxProfitNode->getFunctionName());
+    console.debug("Adding node {}", maxProfitNode->getFunctionName());
     return {ret, maxCost};
   }
 
   for (const auto node : ret) {
-    console->debug("Adding node {}", node->getFunctionName());
+    console.debug("Adding node {}", node->getFunctionName());
   }
   return {ret, curCost};
 }
@@ -676,7 +676,7 @@ double RuntimeEstimatorPhase::getEstimatedCallCountForNode(CgNode* node, std::se
   blacklist.erase(node);
   if (selfRecursive) {
     // TODO JR make this adjustable
-    metacg::MCGLogger::instance().getConsole()->debug("Applying recursion factor of {} for node {}", recursionFactor,
+    metacg::MCGLogger::instance().debug("Applying recursion factor of {} for node {}", recursionFactor,
                                                       node->getFunctionName());
     ret *= selfCalls * recursionFactor;
   }
@@ -713,7 +713,7 @@ double RuntimeEstimatorPhase::kickNodesRandomly(const metacg::CgNode* mainMethod
 
     } while (kicked < callsToKick);
     if (kicked < callsToKick) {
-      metacg::MCGLogger::instance().getConsole()->warn(
+      metacg::MCGLogger::logWarn(
           "Could not kick enough non-hotspot nodes from the instrumentation. Starting kicking of potential "
           "hotspots and nodes that may leave holes...");
       do {
@@ -733,7 +733,7 @@ double RuntimeEstimatorPhase::kickNodesRandomly(const metacg::CgNode* mainMethod
         }
       } while (kicked < callsToKick);
       if (kicked < callsToKick || mainMethod->get<TemporaryInstrumentationDecisionMetadata>()->isKicked) {
-        metacg::MCGLogger::instance().getErrConsole()->error(
+        metacg::MCGLogger::logError(
             "Could not achieve overhead goal even after kicking all nodes");
         exit(-1);
       }
@@ -776,7 +776,7 @@ double RuntimeEstimatorPhase::kickNodesByRuntimePerCallKeepSmall(
       }
     }
     if (kicked < callsToKick) {
-      metacg::MCGLogger::instance().getConsole()->warn(
+      metacg::MCGLogger::logWarn(
           "Could not kick enough  nodes from the instrumentation. Starting kicking of reserved nodes...");
       // Put the saved nodes back
       nodesSortedByRuntimePerCallNoHotspot.insert(nodesSortedByRuntimePerCallNoHotspot.end(), littleCalls.begin(),
@@ -791,13 +791,13 @@ double RuntimeEstimatorPhase::kickNodesByRuntimePerCallKeepSmall(
         }
       }
       if (kicked < callsToKick) {
-        metacg::MCGLogger::instance().getConsole()->warn(
+        metacg::MCGLogger::logWarn(
             "Could not kick enough non-hotspot nodes from the instrumentation. Starting kicking of potential "
             "hotspots...");
         std::sort(nodesSortedByRuntimePerCallHotspot.begin(), nodesSortedByRuntimePerCallHotspot.end(), comparer);
         kickNodesFromInstrumentation(mainMethod, nodesSortedByRuntimePerCallHotspot, callsToKick, kicked);
         if (kicked < callsToKick || mainMethod->get<TemporaryInstrumentationDecisionMetadata>()->isKicked) {
-          metacg::MCGLogger::instance().getErrConsole()->error(
+          metacg::MCGLogger::logError(
               "Could not achieve overhead goal even after kicking all nodes");
           exit(-1);
         }
@@ -844,7 +844,7 @@ bool RuntimeEstimatorPhase::isSelfRecursive(metacg::CgNode* node, metacg::Callgr
 }
 void RuntimeEstimatorPhase::kickSingleNode(metacg::CgNode* node, double& kicked) const {
   pgis::resetInstrumentation(node);
-  metacg::MCGLogger::instance().getConsole()->debug("Kicking node {} with {} calls", node->getFunctionName(),
+  metacg::MCGLogger::instance().debug("Kicking node {} with {} calls", node->getFunctionName(),
                                                     node->get<InstrumentationResultMetaData>()->callCount);
   kicked += node->get<InstrumentationResultMetaData>()->callCount;
   node->get<TemporaryInstrumentationDecisionMetadata>()->isKicked = true;
@@ -882,13 +882,13 @@ void StatisticsEstimatorPhase::modifyGraph(metacg::CgNode* mainMethod) {
       glde.modifyGraph(mainMethod);
     } break;
   }
-  metacg::MCGLogger::instance().getConsole()->info("Running StatisticsEstimatorPhase::modifyGraph");
+  metacg::MCGLogger::logInfo("Running StatisticsEstimatorPhase::modifyGraph");
 
   metacg::analysis::ReachabilityAnalysis ra(graph);
   for (const auto& elem : graph->getNodes()) {
     const auto& node = elem.second.get();
     if (!ra.isReachableFromMain(node)) {
-      metacg::MCGLogger::instance().getConsole()->trace("Running on non-reachable function {}",
+      metacg::MCGLogger::instance().trace("Running on non-reachable function {}",
                                                         node->getFunctionName());
       continue;
     }
@@ -911,14 +911,14 @@ void StatisticsEstimatorPhase::modifyGraph(metacg::CgNode* mainMethod) {
       const auto csMD = node->get<CodeStatisticsMD>();
       totalVarDecls += csMD->numVars;
     } else {
-      metacg::MCGLogger::instance().getConsole()->warn("Node does not have CodeStatisticsMD");
+      metacg::MCGLogger::logWarn("Node does not have CodeStatisticsMD");
     }
   }
 }
 
 void StatisticsEstimatorPhase::printReport() {
   if (!shouldPrintReport) {
-    metacg::MCGLogger::instance().getConsole()->trace("Should not print report");
+    metacg::MCGLogger::instance().trace("Should not print report");
     return;
   }
 
@@ -949,8 +949,8 @@ void StatisticsEstimatorPhase::printReport() {
   const long int maxNumStmts = (*(minMaxIncl.second)).first;
   const long int minNumStmts = (*(minMaxIncl.first)).first;
 
-  auto console = metacg::MCGLogger::instance().getConsole();
-  console->info(
+  auto console = metacg::MCGLogger::instance();
+  metacg::MCGLogger::logInfo(
       " === Call graph statistics ===\n"
       "No. of Functions:\t{}\n"
       "No. of reach. Funcs:\t{}\n"
@@ -975,12 +975,12 @@ void StatisticsEstimatorPhase::printReport() {
       medianNumSingleStmts, minNumSingleStmts, stmtsCoveredWithInstr, stmtsActuallyCovered,
       (totalStmts - stmtsCoveredWithInstr), getCuttoffConditionalBranches(), getCuttoffRoofline(),
       getCuttoffLoopDepth(), getCuttoffGlobalLoopDepth(), totalVarDecls);
-  console->info(printHist(stmtInclHist, "statements"));
-  console->info(printHist(conditionalBranchesInclHist, "conditionalBranches"));
-  console->info(printHist(reverseConditionalBranchesInclHist, "reverseConditionalBranches"));
-  console->info(printHist(rooflineInclHist, "roofline"));
-  console->info(printHist(loopDepthInclHist, "loopDepth"));
-  console->info(printHist(globalLoopDepthInclHist, "globalLoopDepth"));
+  MCGLogger::logInfo(printHist(stmtInclHist, "statements"));
+  MCGLogger::logInfo(printHist(conditionalBranchesInclHist, "conditionalBranches"));
+  MCGLogger::logInfo(printHist(reverseConditionalBranchesInclHist, "reverseConditionalBranches"));
+  MCGLogger::logInfo(printHist(rooflineInclHist, "roofline"));
+  MCGLogger::logInfo(printHist(loopDepthInclHist, "loopDepth"));
+  MCGLogger::logInfo(printHist(globalLoopDepthInclHist, "globalLoopDepth"));
 }
 
 std::string StatisticsEstimatorPhase::printHist(const MapT& hist, const std::string& name) {
@@ -1088,7 +1088,7 @@ void WLCallpathDifferentiationEstimatorPhase::modifyGraph(metacg::CgNode* mainMe
   // TODO: move this parsing somewhere else
   std::ifstream file(whitelistName);
   if (!file) {
-    metacg::MCGLogger::instance().getErrConsole()->error("Error in WLCallpathDifferentitation: Could not open {}",
+    metacg::MCGLogger::logError("Error in WLCallpathDifferentitation: Could not open {}",
                                                          whitelistName);
     exit(1);
   }
@@ -1129,21 +1129,21 @@ SummingCountPhaseBase::~SummingCountPhaseBase() = default;
 
 void SummingCountPhaseBase::modifyGraph(metacg::CgNode* mainMethod) {
   metacg::analysis::ReachabilityAnalysis ra(graph);
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
 
   if (pSEP) {
     threshold = getPreviousThreshold();
-    console->debug("Changed count: now using {} as threshold", threshold);
+    console.debug("Changed count: now using {} as threshold", threshold);
   }
   runInitialization();
   for (const auto& elem : graph->getNodes()) {
     const auto& node = elem.second.get();
-    console->trace("Processing node: {}", node->getFunctionName());
+    console.trace("Processing node: {}", node->getFunctionName());
     if (!ra.isReachableFromMain(node)) {
-      console->trace("\tskipping.");
+      console.trace("\tskipping.");
       continue;
     }
-    console->trace("\testimating.");
+    console.trace("\testimating.");
     estimateCount(node, ra);
   }
 }
@@ -1175,7 +1175,7 @@ void SummingCountPhaseBase::estimateCount(CgNode* startNode, metacg::analysis::R
   }
   counts[startNode] = count;
 
-  metacg::MCGLogger::instance().getConsole()->trace("Function: {} >> InclStatementCount: {}",
+  metacg::MCGLogger::instance().trace("Function: {} >> InclStatementCount: {}",
                                                     startNode->getFunctionName(), count);
   if (count >= threshold) {
     pgis::instrumentNode(startNode);
@@ -1203,7 +1203,7 @@ long int ConditionalBranchesEstimatorPhase::getTargetCount(const CgNode* node) c
     const auto md = node->get<NumConditionalBranchMD>();
     return md->numConditionalBranches;
   } else {
-    metacg::MCGLogger::instance().getConsole()->warn("Node does not have NumConditionalBranchMD");
+    metacg::MCGLogger::logWarn("Node does not have NumConditionalBranchMD");
     return 0;
   }
 }
@@ -1224,7 +1224,7 @@ long int ConditionalBranchesReverseEstimatorPhase::getTargetCount(const CgNode* 
     const auto md = node->get<NumConditionalBranchMD>();
     return maxBranches - md->numConditionalBranches;
   } else {
-    metacg::MCGLogger::instance().getConsole()->warn("Node does not have NumConditionalBranchMD");
+    metacg::MCGLogger::logWarn("Node does not have NumConditionalBranchMD");
     return maxBranches;
   }
 }
@@ -1236,7 +1236,7 @@ void ConditionalBranchesReverseEstimatorPhase::runInitialization() {
       const auto md = node->get<NumConditionalBranchMD>();
       maxBranches = std::max(maxBranches, static_cast<long int>(md->numConditionalBranches));
     } else {
-      metacg::MCGLogger::instance().getConsole()->warn("Node does not have NumConditionalBranchMD");
+      metacg::MCGLogger::logWarn("Node does not have NumConditionalBranchMD");
     }
   }
 }
@@ -1250,7 +1250,7 @@ long int FPAndMemOpsEstimatorPhase::getTargetCount(const CgNode* node) const {
     const auto md = node->get<NumOperationsMD>();
     return md->numberOfFloatOps + md->numberOfMemoryAccesses;
   } else {
-    metacg::MCGLogger::instance().getConsole()->warn("Node does not have NumOperationsMD");
+    metacg::MCGLogger::logWarn("Node does not have NumOperationsMD");
     return 0;
   }
 }
@@ -1264,7 +1264,7 @@ long int LoopDepthEstimatorPhase::getTargetCount(const CgNode* node) const {
     const auto md = node->get<LoopDepthMD>();
     return md->loopDepth;
   } else {
-    metacg::MCGLogger::instance().getConsole()->warn("Node does not have LoopDepthMD");
+    metacg::MCGLogger::logWarn("Node does not have LoopDepthMD");
     return 0;
   }
 }
@@ -1278,7 +1278,7 @@ long int GlobalLoopDepthEstimatorPhase::getTargetCount(const CgNode* node) const
     const auto md = node->get<GlobalLoopDepthMD>();
     return md->globalLoopDepth;
   } else {
-    metacg::MCGLogger::instance().getConsole()->warn("Node does not have GlobalLoopDepthMD");
+    metacg::MCGLogger::logWarn("Node does not have GlobalLoopDepthMD");
     return 0;
   }
 }
@@ -1367,18 +1367,18 @@ void AttachInstrumentationResultsEstimatorPhase::printReport() {
       snodes.insert(node);
     }
   }
-  auto console = metacg::MCGLogger::instance().getConsole();
-  console->debug("Begin report for {}", getName());
+  auto console = metacg::MCGLogger::instance();
+  console.debug("Begin report for {}", getName());
   for (const auto& node : snodes) {
     const auto irmd = node->get<InstrumentationResultMetaData>();
     if (irmd->isExclusiveRuntime) {
-      console->debug(
+      console.debug(
           "{}: Calls: {} Time: {:.10f} Time per call: {:.10f} Inclusive runtime: {:.10f} (Exclusive) Inclusive runtime "
           "sum: {:.10f}",
           node->getFunctionName(), irmd->callCount, irmd->runtime, irmd->timePerCall, irmd->inclusiveRunTimeCube,
           irmd->inclusiveRunTimeSum);
     } else {
-      console->debug(
+      console.debug(
           "{}: Calls: {} Time: {:.10f} Time per call: {:.10f} Inclusive runtime: {:.10f} (Not-Exclusive) Inclusive "
           "runtime "
           "sum: {:.10f}",
@@ -1387,7 +1387,7 @@ void AttachInstrumentationResultsEstimatorPhase::printReport() {
     }
   }
   // Reset precision
-  console->debug("End report for {}", getName());
+  console.debug("End report for {}", getName());
 }
 void FillInstrumentationGapsPhase::modifyGraph(CgNode* mainMethod) {
   metacg::analysis::ReachabilityAnalysis ra(graph);
@@ -1415,17 +1415,17 @@ void FillInstrumentationGapsPhase::modifyGraph(CgNode* mainMethod) {
     }
 
     if (ntf->getHasBody() || isMPIFunction(ntf) || (!onlyEligibleNodes && !useCSInstrumentation)) {
-      metacg::MCGLogger::instance().getConsole()->trace("Instrumenting {} as node to main.", ntf->getFunctionName());
+      metacg::MCGLogger::instance().trace("Instrumenting {} as node to main.", ntf->getFunctionName());
       pgis::instrumentNode(ntf);
     } else if (useCSInstrumentation) {
       if (onlyEligibleNodes) {
         if (isEligibleForPathInstrumentation(ntf, graph)) {
-          metacg::MCGLogger::instance().getConsole()->trace("Instrumenting (cs) {} as node to main.",
+          metacg::MCGLogger::instance().trace("Instrumenting (cs) {} as node to main.",
                                                             ntf->getFunctionName());
           pgis::instrumentPathNode(ntf);
         }
       } else {
-        metacg::MCGLogger::instance().getConsole()->trace("Instrumenting (cs) {} as node to main.",
+        metacg::MCGLogger::instance().trace("Instrumenting (cs) {} as node to main.",
                                                           ntf->getFunctionName());
         pgis::instrumentPathNode(ntf);
       }
@@ -1441,13 +1441,13 @@ FillInstrumentationGapsPhase::FillInstrumentationGapsPhase(metacg::Callgraph* ca
 }
 
 void FillInstrumentationGapsPhase::printReport() {
-  auto console = metacg::MCGLogger::instance().getConsole();
-  console->debug("Begin report for {}", getName());
-  console->debug("Instrumented:");
+  auto console = metacg::MCGLogger::instance();
+  console.debug("Begin report for {}", getName());
+  console.debug("Instrumented:");
   for (const auto& node : nodesToFill) {
-    console->debug(" {}", node->getFunctionName());
+    console.debug(" {}", node->getFunctionName());
   }
-  console->debug("End report for {}", getName());
+  console.debug("End report for {}", getName());
 }
 
 void StoreInstrumentationDecisionsPhase::modifyGraph(metacg::CgNode* /*mainMethod*/) {

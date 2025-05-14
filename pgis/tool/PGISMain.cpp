@@ -45,7 +45,7 @@ static pgis::ErrorCode readFromCubeFile(const std::filesystem::path& cubeFilePat
   }
 
   if (const auto ext = cubeFilePath.extension(); ext.string() != ".cubex") {
-    metacg::MCGLogger::instance().getConsole()->error("Unknown file format. (" + cubeFilePath.string() + ")");
+    metacg::MCGLogger::logError("Unknown file format. (" + cubeFilePath.string() + ")");
     return pgis::UnknownFileFormat;
   }
 
@@ -63,14 +63,14 @@ void registerEstimatorPhases(metacg::pgis::PiraMCGProcessor& consumer, Config* c
 
   // Actually do the selection
   if (!isIPCG) {
-    metacg::MCGLogger::instance().getConsole()->info("New runtime threshold for profiling: ${}$", runtimeThreshold);
+    MCGLogger::logInfo("New runtime threshold for profiling: ${}$", runtimeThreshold);
     consumer.registerEstimatorPhase(new RuntimeEstimatorPhase(consumer.getCallgraph(), runtimeThreshold));
   } else {
     HeuristicSelection::HeuristicSelectionEnum heuristicMode = pgis::config::getSelectedHeuristic();
     switch (heuristicMode) {
       case HeuristicSelection::HeuristicSelectionEnum::STATEMENTS: {
         const int nStmt = 2000;
-        metacg::MCGLogger::instance().getConsole()->info("New runtime threshold for profiling: ${}$", nStmt);
+        MCGLogger::logInfo("New runtime threshold for profiling: ${}$", nStmt);
         consumer.registerEstimatorPhase(
             new StatementCountEstimatorPhase(nStmt, consumer.getCallgraph(), true, statEstimator));
       } break;
@@ -127,11 +127,11 @@ void setDebugLevel(const Opt& result) {
 }
 
 int main(int argc, char** argv) {
-  auto console = metacg::MCGLogger::instance().getConsole();
-  auto errconsole = metacg::MCGLogger::instance().getErrConsole();
+  auto console = metacg::MCGLogger::instance();
+  auto errconsole = metacg::MCGLogger::instance();
 
   if (argc == 1) {
-    errconsole->error("Too few arguments. Use --help to show help.");
+    MCGLogger::logError("Too few arguments. Use --help to show help.");
     exit(pgis::TooFewProgramArguments);
   }
 
@@ -202,7 +202,7 @@ int main(int argc, char** argv) {
   /* Whether Score-P output file format should be used */
   const bool useScorepFormat = storeOpt(scorepOut, result);
   if (useScorepFormat) {
-    console->info("Setting Score-P Output Format");
+    metacg::MCGLogger::logInfo("Setting Score-P Output Format");
   }
 
   /* Enable MPI Load-Imbalance detection */
@@ -229,17 +229,17 @@ int main(int argc, char** argv) {
   const int targetOverheadArg = storeOpt(targetOverhead, result);
   const int prevOverheadArg = storeOpt(prevOverhead, result);
   if ((prevOverheadArg != 0 || targetOverheadArg != 0) && targetOverheadArg < 1000) {
-    errconsole->error("Target overhead in percent must greater than 100%");
+    metacg::MCGLogger::logError("Target overhead in percent must greater than 100%");
     exit(pgis::ErroneousOverheadConfiguration);
   }
   OverheadSelection overheadMode = storeOpt(overheadSelection, result);
   if (targetOverheadArg != 0 && overheadMode.mode == OverheadSelection::OverheadSelectionEnum::None) {
-    errconsole->warn("Overhead mode is none but target overhead is specified");
+    metacg::MCGLogger::logWarn("Overhead mode is none but target overhead is specified");
   }
 
   if (mcgVersion < 2 &&
       pgis::config::getSelectedHeuristic() != HeuristicSelection::HeuristicSelectionEnum::STATEMENTS) {
-    errconsole->error("Heuristics other than 'statements' are not supported with metacg format 1");
+    metacg::MCGLogger::logError("Heuristics other than 'statements' are not supported with metacg format 1");
     exit(pgis::ErroneousHeuristicsConfiguration);
   }
 
@@ -254,14 +254,14 @@ int main(int argc, char** argv) {
   // Use the filesystem STL functions for all of the path bits
   const std::filesystem::path metacgFile(argv[argc - 1]);
   if (!std::filesystem::exists(metacgFile)) {
-    errconsole->error("The file {} does not exist", metacgFile.string());
+    metacg::MCGLogger::logError("The file {} does not exist", metacgFile.string());
     exit(pgis::FileDoesNotExist);
   }
   const auto mcgExtension = metacgFile.extension();
   c.appName = metacgFile.stem().string();
 
-  console->info("MetaCG file: {}", metacgFile.string());
-  console->info("Using AppName: {}", c.appName);
+  metacg::MCGLogger::logInfo("MetaCG file: {}", metacgFile.string());
+  metacg::MCGLogger::logInfo("Using AppName: {}", c.appName);
 
   const float runTimeThreshold = .0f;
   auto& consumer = metacg::pgis::PiraMCGProcessor::get();
@@ -272,10 +272,10 @@ int main(int argc, char** argv) {
   if (!gConfig.getVal(extrapConfig).empty()) {
     const std::filesystem::path extrapConfigFile(gConfig.getVal(extrapConfig));
     if (!std::filesystem::exists(extrapConfigFile)) {
-      errconsole->error("Extra-P configuration file does not exist: {}", extrapConfigFile.string());
+      metacg::MCGLogger::logError("Extra-P configuration file does not exist: {}", extrapConfigFile.string());
       exit(metacg::pgis::FileDoesNotExist);
     }
-    console->info("Reading Extra-P configuration from {}", extrapConfigFile.string());
+    metacg::MCGLogger::logInfo("Reading Extra-P configuration from {}", extrapConfigFile.string());
     consumer.setExtrapConfig(extrapconnection::getExtrapConfigFromJSON(extrapConfigFile));
   }
 
@@ -306,14 +306,14 @@ int main(int argc, char** argv) {
       pgis::attachMetaDataToGraph<pira::PiraTwoData>(mcgm.getCallgraph());
     }
 
-    console->info("Read MetaCG with {} nodes.", mcgm.getCallgraph()->size());
+    metacg::MCGLogger::logInfo("Read MetaCG with {} nodes.", mcgm.getCallgraph()->size());
     consumer.setCG(mcgm.getCallgraph());
 
     if (applyStaticFilter) {
       // load imbalance detection
       // ========================
       if (enableLide) {
-        console->info("Using trivial static analysis for load imbalance detection (OnlyMainEstimatorPhase");
+        metacg::MCGLogger::logInfo("Using trivial static analysis for load imbalance detection (OnlyMainEstimatorPhase");
         // static instrumentation -> OnlyMainEstimatorPhase
         if (!result.count("cube")) {
           consumer.registerEstimatorPhase(new LoadImbalance::OnlyMainEstimatorPhase(consumer.getCallgraph()));
@@ -338,11 +338,11 @@ int main(int argc, char** argv) {
     // load imbalance detection
     // ========================
     if (enableLide) {
-      console->info("Using load imbalance detection mode");
+      metacg::MCGLogger::logInfo("Using load imbalance detection mode");
       auto& pConfig = pgis::config::ParameterConfig::get();
 
       if (!pConfig.getLIConfig()) {
-        errconsole->error(
+        metacg::MCGLogger::logError(
             "Provide configuration for load imbalance detection. Refer to PIRA's README for further details.");
         return pgis::ErroneousHeuristicsConfiguration;
       }
@@ -355,8 +355,8 @@ int main(int argc, char** argv) {
 
       // should be set for working load imbalance detection
       if (result.count("export")) {
-        console->info("Exporting load imbalance data to IPCG file {}.", metacgFile.string());
-        console->warn(
+        metacg::MCGLogger::logInfo("Exporting load imbalance data to IPCG file {}.", metacgFile.string());
+        metacg::MCGLogger::logWarn(
             "The old annotate mechanism has been removed and this functionality has not been tested with MCGWriter.");
 
         metacg::io::VersionTwoMCGWriter mcgWriter{};
@@ -368,7 +368,7 @@ int main(int argc, char** argv) {
         }
 
       } else {
-        console->warn("--export flag is highly recommended for load imbalance detection");
+        metacg::MCGLogger::logWarn("--export flag is highly recommended for load imbalance detection");
       }
 
       return metacg::pgis::SUCCESS;
@@ -376,7 +376,7 @@ int main(int argc, char** argv) {
       c.totalRuntime = c.actualRuntime;
       /* This runtime threshold currently unused */
       registerEstimatorPhases(consumer, &c, false, runTimeThreshold, fillInstrumentationGaps);
-      console->info("Registered estimator phases");
+      metacg::MCGLogger::logInfo("Registered estimator phases");
     }
   }
 
@@ -384,18 +384,18 @@ int main(int argc, char** argv) {
     // test whether PIRA II configPtr is present
     auto& pConfig = pgis::config::ParameterConfig::get();
     if (!pConfig.getPiraIIConfig()) {
-      console->error("Provide PIRA II configuration in order to use Extra-P estimators.");
+      MCGLogger::logError("Provide PIRA II configuration in order to use Extra-P estimators.");
       return pgis::ErroneousHeuristicsConfiguration;
     }
 
     consumer.attachExtrapModels();
 
     if (applyModelFilter) {
-      console->info("Applying model filter");
+      MCGLogger::logInfo("Applying model filter");
       consumer.registerEstimatorPhase(
           new pira::ExtrapLocalEstimatorPhaseSingleValueFilter(consumer.getCallgraph(), true, extrapRuntimeOnly));
     } else {
-      console->info("Applying model expander");
+      MCGLogger::logInfo("Applying model expander");
       consumer.registerEstimatorPhase(
           new pira::ExtrapLocalEstimatorPhaseSingleValueExpander(consumer.getCallgraph(), true, extrapRuntimeOnly));
     }
@@ -405,8 +405,8 @@ int main(int argc, char** argv) {
     // XXX Should this be done after filter / expander were run? Currently we do this after model creation, yet,
     // *before* running the estimator phase
     if (result.count("export")) {
-      console->info("Exporting to IPCG file.");
-      console->warn(
+      MCGLogger::logInfo("Exporting to IPCG file.");
+      MCGLogger::logWarn(
           "The old annotate mechanism has been removed and this functionality has not been tested with MCGWriter.");
 
       metacg::io::VersionTwoMCGWriter mcgWriter;
@@ -430,7 +430,7 @@ int main(int argc, char** argv) {
     if (enableDotExport.mode == DotExportSelection::DotExportEnum::ALL) {
       consumer.setOutputDotBetweenPhases();
     }
-    console->info("Running registered estimator phases");
+    MCGLogger::logInfo("Running registered estimator phases");
     consumer.applyRegisteredPhases();
   }
   if (enableDotExport.mode == DotExportSelection::DotExportEnum::END ||

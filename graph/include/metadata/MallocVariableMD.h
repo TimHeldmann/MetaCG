@@ -17,9 +17,9 @@ class MallocVariableMD : public metacg::MetaData::Registrar<MallocVariableMD> {
   MallocVariableMD() = default;
 
   explicit MallocVariableMD(const nlohmann::json& j) {
-    metacg::MCGLogger::instance().getConsole()->trace("Creating {} metadata from json", key);
+    metacg::MCGLogger::instance().trace("Creating {} metadata from json", key);
     if (j.is_null()) {
-      metacg::MCGLogger::instance().getConsole()->trace("Could not retrieve metadata for {}", key);
+      metacg::MCGLogger::instance().trace("Could not retrieve metadata for {}", key);
     }
 
     for (const auto& elem : j) {

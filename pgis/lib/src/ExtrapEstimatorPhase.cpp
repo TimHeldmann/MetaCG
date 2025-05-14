@@ -135,8 +135,8 @@ void ExtrapLocalEstimatorPhaseSingleValueExpander::modifyGraph(metacg::CgNode* m
 
   for (const auto& elem : graph->getNodes()) {
     const auto& n = elem.second.get();
-    auto console = metacg::MCGLogger::instance().getConsole();
-    console->trace("Running ExtrapLocalEstimatorPhaseExpander::modifyGraph on {}", n->getFunctionName());
+    auto console = metacg::MCGLogger::instance();
+    console.trace("Running ExtrapLocalEstimatorPhaseExpander::modifyGraph on {}", n->getFunctionName());
     auto [shouldInstr, funcRtVal] = shouldInstrument(n);
     if (shouldInstr) {
       if (!n->getOrCreateMD<PiraOneData>()->getHasBody() && n->get<BaseProfileData>()->getRuntimeInSeconds() == .0) {
@@ -153,7 +153,7 @@ void ExtrapLocalEstimatorPhaseSingleValueExpander::modifyGraph(metacg::CgNode* m
           pathsToMain[n] = nodesToMain;
         }
         auto nodesToMain = pathsToMain[n];
-        console->trace("Found {} nodes to main.", nodesToMain.size());
+        console.trace("Found {} nodes to main.", nodesToMain.size());
         for (const auto& ntm : nodesToMain) {
           metacg::pgis::instrumentNode(ntm);
         }

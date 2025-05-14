@@ -138,8 +138,8 @@ const auto attInclRuntime = [](auto& cube, auto cnode, auto n, [[maybe_unused]] 
     }
 
     get<BaseProfileData>(n)->addInclusiveRuntimeInSeconds(cumulatedTime);
-    auto console = metacg::MCGLogger::instance().getConsole();
-    console->debug("Attaching inclusive runtime {} to node {}", cumulatedTime, n->getFunctionName());
+    auto console = metacg::MCGLogger::instance();
+    console.debug("Attaching inclusive runtime {} to node {}", cumulatedTime, n->getFunctionName());
   } else if (has<PiraOneData>(n)) {
     get<PiraOneData>(n)->setComesFromCube();
   }
@@ -150,17 +150,17 @@ void build(const std::filesystem::path& filePath, metacg::graph::MCGManager& mcg
   //  auto &cg = metacg::pgis::PiraMCGProcessor::get();
   bool useMangledNames = true;
 
-  auto console = metacg::MCGLogger::instance().getConsole();
+  auto console = metacg::MCGLogger::instance();
 
   try {
     cube::Cube cube;
     // Read our cube file
-    console->info("Reading cube file {}", filePath.string());
+    metacg::MCGLogger::logInfo("Reading cube file {}", filePath.string());
     cube.openCubeReport(filePath.string());
     // Get the cube nodes
     const auto& cnodes = cube.get_cnodev();
 
-    console->trace("Cube contains: {} nodes", cnodes.size());
+    console.trace("Cube contains: {} nodes", cnodes.size());
     for (const auto cnode : cnodes) {
       if (!cnode->get_parent()) {
         // Root node. This should be the name of the program and not main. Do not add it to the callgraph
@@ -178,7 +178,7 @@ void build(const std::filesystem::path& filePath, metacg::graph::MCGManager& mcg
         if (!mcgm.getCallgraph()->existEdgeFromTo(pName, cName)) {
           mcgm.getCallgraph()->addEdge(pName, cName);
         } else {
-          console->trace("Tried adding edge between {} and {} even though it already exists", pName, cName);
+          console.trace("Tried adding edge between {} and {} even though it already exists", pName, cName);
         }
       } else {
         assert(pName != "main");
@@ -189,7 +189,7 @@ void build(const std::filesystem::path& filePath, metacg::graph::MCGManager& mcg
     }
 
   } catch (std::exception& e) {
-    console->warn("Exception caught.\n{}", e.what());
+    metacg::MCGLogger::logWarn("Exception caught.\n{}", e.what());
   }
 }
 
