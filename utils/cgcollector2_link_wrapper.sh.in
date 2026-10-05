@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+# Wrapper script for merging call graphs at link time when using the
+# cgcollector2 compiler wrappers (cgcollector2_cc_wrapper.sh / cgcollector2_cxx_wrapper.sh).
+#
+# Usage:
+#     cgcollector2_link_wrapper.sh [linker options and object files]
+#
+# Options:
+#     --skip-gen-bin        # Skip the final compilation step. Only generate the call graph.
+#
+# Environment variables:
+#     CGCOLLECTOR2_LINK_BIN      # The compiler/linker to use for the final link step,
+#                                # defaults to "cc". Set to "c++" (or similar) for
+#                                # projects that need to be linked as C++.
+#     CGCOLLECTOR2_CGMERGE2_BIN  # Path to the cgmerge2 binary
+
+link_bin=${CGCOLLECTOR2_LINK_BIN:-"cc"}
+cgmerge2_bin=${CGCOLLECTOR2_CGMERGE2_BIN:-"@CGCOLLECTOR2_CGMERGE2_BIN@"}
+
+if [[ $# -gt 0 && "$1" != -* ]] && command -v "$1" &>/dev/null; then
+    link_bin="$1"
+    shift
+fi
+
+if ! command -v "$link_bin" &>/dev/null; then
+    echo "Error: $link_bin not found in PATH."
+    exit 1
+fi
+
+if ! command -v "$cgmerge2_bin" &>/dev/null; then
+    echo "Error: $cgmerge2_bin not found in PATH."
+    exit 1
+fi
+
+object_files=()
+output_file=""
+
+option_o=false
+skip_gen_bin=false
+for arg in "$@"; do
+    if $option_o; then
+        output_file="$arg"
+        option_o=false
+        continue
+    fi
+
+    case "$arg" in
+    --skip-gen-bin)
+        skip_gen_bin=true
+        ;;
+    -o)
+        option_o=true
+        ;;
+    *.o)
+        object_files+=("$arg")
+        ;;
+    esac
+done
+
+if [ ${#object_files[@]} -gt 0 ] && [ -n "$output_file" ]; then
+    for i in "${!object_files[@]}"; do
+        object_files[i]="${object_files[$i]}.mcg"
+    done
+    "$cgmerge2_bin" "${output_file}.mcg" "${object_files[@]}"
+fi
+
+if ! $skip_gen_bin; then
+    exec "$link_bin" "$@"
+fi

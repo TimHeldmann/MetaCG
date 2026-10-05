@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+
+# Wrapper script for running cgcollector2 alongside a C++ compiler.
+# This script acts as a compiler wrapper or a drop-in replacement
+# for the C++ compiler while additionally generating a per-translation-unit
+# call graph for each compiled source file.
+#
+# Usage:
+#     1. Compiler wrapper:
+#        Pass the compiler as the first argument. This takes precedence.
+#     2. Compiler drop-in replacement:
+#        Use this script in place of the compiler. The compiler binary
+#        is taken from the `CGCOLLECTOR2_CXX_BIN` environment variable
+#        (defaults to "c++").
+#
+#     cgcollector2_cxx_wrapper.sh [C++ compiler options, source files]
+#
+# Options:
+#     --skip-gen-bin        # Skip the final compilation step. Only generate the call graph.
+#
+# Any argument starting with `--` (other than `--skip-gen-bin`) is assumed to
+# be a cgcollector2 option (e.g. `--whole-program`, `--NumStatements`,
+# `--metacg-format-version=4`) and is forwarded to cgcollector2 directly.
+# All remaining, non source-file arguments (includes, defines, standard
+# version, ...) are forwarded to cgcollector2 via `--extra-arg`.
+#
+# Environment variables:
+#     CGCOLLECTOR2_CXX_BIN     # The C++ compiler to use, defaults to "c++"
+#     CGCOLLECTOR2_BIN         # Path to the cgcollector2 binary
+#     CGCOLLECTOR2_OPTIONS     # Extra options passed directly to cgcollector2
+#     CGCOLLECTOR2_EXTRA_ARGS  # Extra options forwarded via `--extra-arg`,
+#                              # useful for compiler flags that start with
+#                              # `--` and would otherwise be mistaken for a
+#                              # cgcollector2 option (e.g. `--sysroot=...`)
+
+cxx_bin=${CGCOLLECTOR2_CXX_BIN:-"c++"}
+cgcollector2_bin=${CGCOLLECTOR2_BIN:-"@CGCOLLECTOR2_BIN@"}
+
+if [[ $# -gt 0 && "$1" != -* ]] && command -v "$1" &>/dev/null; then
+    cxx_bin="$1"
+    shift
+fi
+
+if ! command -v "$cxx_bin" &>/dev/null; then
+    echo "Error: $cxx_bin not found in PATH."
+    exit 1
+fi
+
+if ! command -v "$cgcollector2_bin" &>/dev/null; then
+    echo "Error: $cgcollector2_bin not found in PATH."
+    exit 1
+fi
+
+read -r -a cgcollector2_options <<<"${CGCOLLECTOR2_OPTIONS:-}"
+read -r -a extra_args <<<"${CGCOLLECTOR2_EXTRA_ARGS:-}"
+
+source_files=()
+original_args=("$@")
+output_file=""
+skip_gen_bin=false
+
+option_o=false
+for arg in "$@"; do
+    if $option_o; then
+        output_file="$arg"
+        option_o=false
+        continue
+    fi
+
+    case "$arg" in
+    --skip-gen-bin)
+        skip_gen_bin=true
+        ;;
+    -o)
+        option_o=true
+        ;;
+    -c)
+        # only compiling, no linking is being performed anyway
+        ;;
+    --*)
+        cgcollector2_options+=("$arg")
+        ;;
+    *.cpp | *.cc | *.cxx | *.C | *.c++)
+        source_files+=("$arg")
+        ;;
+    *)
+        extra_args+=("$arg")
+        ;;
+    esac
+done
+
+for source_file in "${source_files[@]}"; do
+    if [ -n "$output_file" ] && [ "${#source_files[@]}" -eq 1 ]; then
+        obj_file="$output_file"
+    else
+        obj_file="$(basename "${source_file%.*}").o"
+    fi
+
+    "$cgcollector2_bin" "${cgcollector2_options[@]}" "$source_file" --cg-file="${obj_file}.mcg" \
+        "${extra_args[@]/#/--extra-arg=}" -- || {
+        echo "Error: cgcollector2 failed for $source_file"
+        exit 1
+    }
+done
+
+if ! $skip_gen_bin; then
+    exec "$cxx_bin" "${original_args[@]}"
+fi
