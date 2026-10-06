@@ -39,17 +39,14 @@ if(METACG_BUILD_GRAPH_TOOLS)
   endfunction()
 
   configure_cgcollector2_wrapper_and_install(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cgcollector2_cc_wrapper.sh.in"
-    "cgcollector2_cc_wrapper.sh"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cgcollector2_cc_wrapper.sh.in" "cgcollector2_cc_wrapper.sh"
   )
 
   configure_cgcollector2_wrapper_and_install(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cgcollector2_cxx_wrapper.sh.in"
-    "cgcollector2_cxx_wrapper.sh"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cgcollector2_cxx_wrapper.sh.in" "cgcollector2_cxx_wrapper.sh"
   )
 
   configure_cgcollector2_wrapper_and_install(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cgcollector2_link_wrapper.sh.in"
-    "cgcollector2_link_wrapper.sh"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cgcollector2_link_wrapper.sh.in" "cgcollector2_link_wrapper.sh"
   )
 endif()
