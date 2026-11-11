@@ -13,13 +13,11 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "take"
-                    ],
                     "paramTypes": [
                         "std::initializer_list<S>"
                     ],
-                    "retType": "void"
+                    "retType": "void",
+                    "thisType": ""
                 }
             },
             "overriddenBy": [],
@@ -35,13 +33,11 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "S"
-                    ],
                     "paramTypes": [
                         "int"
                     ],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "S"
                 }
             },
             "overriddenBy": [],
@@ -57,13 +53,11 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "S"
-                    ],
                     "paramTypes": [
                         "int"
                     ],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "S"
                 }
             },
             "overriddenBy": [],
@@ -79,11 +73,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "~S"
-                    ],
                     "paramTypes": [],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "S"
                 }
             },
             "overriddenBy": [],
@@ -99,11 +91,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "~S"
-                    ],
                     "paramTypes": [],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "S"
                 }
             },
             "overriddenBy": [],
@@ -119,11 +109,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "~initializer_list"
-                    ],
                     "paramTypes": [],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "std::initializer_list<S>"
                 }
             },
             "overriddenBy": [],
@@ -139,11 +127,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "~initializer_list"
-                    ],
                     "paramTypes": [],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "std::initializer_list<S>"
                 }
             },
             "overriddenBy": [],
@@ -163,11 +149,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "main"
-                    ],
                     "paramTypes": [],
-                    "retType": "int"
+                    "retType": "int",
+                    "thisType": ""
                 }
             },
             "overriddenBy": [],

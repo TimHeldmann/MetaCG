@@ -22,11 +22,10 @@
       },
       "main":{
          "callees":[
-            "_ZZ4mainENK3$_0clEi",
-            "main"
+            "_ZZ4mainENK3$_0clEi"
          ],
          "callers":[
-            "main"
+
          ],
          "doesOverride":false,
          "hasBody":true,

@@ -13,11 +13,9 @@
             "meta": {
                 "AllAliasMetadata": [
                     {
-                        "funcName": [
-                            ""
-                        ],
                         "paramTypes": [],
-                        "retType": "void"
+                        "retType": "void",
+                        "thisType": ""
                     }
                 ],
                 "numStatements": 0
