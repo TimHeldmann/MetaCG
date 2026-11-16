@@ -10,11 +10,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "localClass"
-                    ],
                     "paramTypes": [],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "localClass"
                 }
             },
             "overriddenBy": [],
@@ -30,11 +28,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "localClass"
-                    ],
                     "paramTypes": [],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "localClass"
                 }
             },
             "overriddenBy": [],
@@ -50,15 +46,13 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "operator()"
-                    ],
                     "paramTypes": [
                         "int",
                         "int",
                         "int"
                     ],
-                    "retType": "int"
+                    "retType": "int",
+                    "thisType": "localClass"
                 }
             },
             "overriddenBy": [],
@@ -76,11 +70,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "main"
-                    ],
                     "paramTypes": [],
-                    "retType": "int"
+                    "retType": "int",
+                    "thisType": ""
                 }
             },
             "overriddenBy": [],

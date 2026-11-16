@@ -7,8 +7,7 @@
 #ifndef CGCOLLECTOR2_FUNCTIONSIGNATUREMETADATA_H
 #define CGCOLLECTOR2_FUNCTIONSIGNATUREMETADATA_H
 
-#include <clang/AST/Type.h>
-
+#include "cgcollector2/SharedDefs.h"
 #include "metacg/metadata/MetaData.h"
 
 class FunctionSignatureMetadata : public metacg::MetaData::Registrar<FunctionSignatureMetadata> {

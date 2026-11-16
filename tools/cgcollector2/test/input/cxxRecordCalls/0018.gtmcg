@@ -10,11 +10,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "foo"
-                    ],
                     "paramTypes": [],
-                    "retType": "int"
+                    "retType": "int",
+                    "thisType": "A"
                 }
             },
             "overriddenBy": [],
@@ -30,11 +28,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "A"
-                    ],
                     "paramTypes": [],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "A"
                 }
             },
             "overriddenBy": [],
@@ -50,11 +46,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "A"
-                    ],
                     "paramTypes": [],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "A"
                 }
             },
             "overriddenBy": [],
@@ -70,11 +64,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "~A"
-                    ],
                     "paramTypes": [],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "A"
                 }
             },
             "overriddenBy": [],
@@ -90,11 +82,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "~A"
-                    ],
                     "paramTypes": [],
-                    "retType": ""
+                    "retType": "",
+                    "thisType": "A"
                 }
             },
             "overriddenBy": [],
@@ -114,11 +104,9 @@
             "isVirtual": false,
             "meta": {
                 "FunctionSignatureMetadata": {
-                    "funcName": [
-                        "main"
-                    ],
                     "paramTypes": [],
-                    "retType": "int"
+                    "retType": "int",
+                    "thisType": ""
                 }
             },
             "overriddenBy": [],
