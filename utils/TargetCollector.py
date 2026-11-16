@@ -178,7 +178,23 @@ def parseArgs():
             for option in matches:
                 print(option)
             exit()
-
+    # the completion request is handled before parsing, as argparse mangles values like "--",
+    # and the remaining command line does not need to be valid while the user is still typing it
+    completionPrefix: str = "--completion="
+    for argument in sys.argv[1:]:
+        if argument.startswith(completionPrefix):
+            partial = argument[len(completionPrefix):]
+            # prints all options the partial word is a prefix of, one per line, for use by the shell completion script
+            # both short and long options are matched, so "-v" yields "-v" and "-vv", and "--ver" yields the long verbose options
+            # if nothing matches literally, leading dashes are ignored, so "-ver" still matches "--verbose"
+            options: list[str] = [option for action in parser._actions for option in action.option_strings]
+            matches: list[str] = [option for option in options if option.startswith(partial)]
+            if not matches:
+                name: str = partial.lstrip("-")
+                matches = [option for option in options if option.startswith("--") and option[2:].startswith(name)]
+            for option in matches:
+                print(option)
+            exit()
     # parse all arguments after the first one, as this is the name we got called by
     return parser.parse_args(sys.argv[1:])
 
