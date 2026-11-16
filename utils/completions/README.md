@@ -64,10 +64,12 @@ metacg::completion::completeList(partial, commands);
 
 ## Enabling Bash completions
 
-A Bash completion script is provided in this directory.
+CMake generates a Bash completion script from `metacg-completion.bash.in`.
+Every executable that calls `add_metacg_completion()` is registered in it automatically, so the script does not need to be edited when a tool is added.
+The script is written to `<build-dir>/utils/completions/metacg-completion.bash` and installed to `<prefix>/share/metacg/metacg-completion.bash`.
 
 To enable completions for the current shell session, source the script:
 
 ```bash
-source path/to/metacg_completion.bash
+source <prefix>/share/metacg/metacg-completion.bash
 ```

@@ -204,3 +204,7 @@ if(METACG_BUILD_CGFCOLLECTOR)
     message(STATUS "Skipping CGFCollector: requires LLVM version 18 or higher")
   endif()
 endif()
+
+# Generate the bash completion script for all targets that called add_metacg_completion(). This must stay at the end,
+# after all targets have been added.
+metacg_generate_completion_script()

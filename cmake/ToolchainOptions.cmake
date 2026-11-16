@@ -37,7 +37,46 @@ function(add_metacg_library target)
 endfunction()
 
 function(add_metacg_completion target)
+  get_property(script_generated GLOBAL PROPERTY METACG_COMPLETION_SCRIPT_GENERATED)
+  if(script_generated)
+    message(
+      FATAL_ERROR
+        "add_metacg_completion(${target}) was called after the completion script was generated. "
+        "Make sure metacg_generate_completion_script() is called after all targets have been added."
+    )
+  endif()
+
   target_link_libraries(${target} PUBLIC MetaCGCompletion)
+  # Keep track of all targets with completion support, so the bash completion script can register them
+  set_property(GLOBAL APPEND PROPERTY METACG_COMPLETION_TARGETS ${target})
+endfunction()
+
+# Generates the bash completion script that registers all targets added via add_metacg_completion(). Needs to be
+# called after all targets have been added.
+function(metacg_generate_completion_script)
+  get_property(completion_targets GLOBAL PROPERTY METACG_COMPLETION_TARGETS)
+  set_property(GLOBAL PROPERTY METACG_COMPLETION_SCRIPT_GENERATED TRUE)
+
+  if(NOT completion_targets)
+    return()
+  endif()
+
+  set(METACG_COMPLETION_REGISTRATIONS "")
+  foreach(completion_target IN LISTS completion_targets)
+    # Use the name of the produced binary, which may differ from the target name
+    get_target_property(binary_name ${completion_target} OUTPUT_NAME)
+    if(NOT binary_name)
+      set(binary_name ${completion_target})
+    endif()
+    string(APPEND METACG_COMPLETION_REGISTRATIONS "complete -F _metacg_completion ${binary_name}\n")
+  endforeach()
+
+  string(STRIP "${METACG_COMPLETION_REGISTRATIONS}" METACG_COMPLETION_REGISTRATIONS)
+
+  set(completion_script ${PROJECT_BINARY_DIR}/utils/completions/metacg-completion.bash)
+  configure_file(${PROJECT_SOURCE_DIR}/utils/completions/metacg-completion.bash.in ${completion_script} @ONLY)
+
+  install(FILES ${completion_script} DESTINATION share/metacg)
 endfunction()
 
 # Project compile options
