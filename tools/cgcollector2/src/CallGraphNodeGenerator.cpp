@@ -634,6 +634,17 @@ void CallGraphNodeGenerator::addNode(const clang::FunctionDecl* const D) {
     metacg::CgNode& node = callgraph->getOrInsertNode(name);
     // This is so we overwrite if we ever find the body of a function after a predeclare
     node.setHasBody(D->hasBody());
+
+    const auto fullSrcLoc = D->getASTContext().getFullLoc(D->getSourceRange().getBegin());
+#if LLVM_VERSION_MAJOR < 18
+    const auto fileEntry = fullSrcLoc.getFileEntry();
+#else
+    const auto fileEntry = fullSrcLoc.getFileEntryRef();
+#endif
+
+    const auto fileName = fileEntry->getName();
+    std::string fileNameStr = fileName.str();
+    node.setOrigin(fileNameStr);
     if (auto cxxmethod = dyn_cast<CXXMethodDecl>(D); cxxmethod != nullptr && cxxmethod->isVirtual()) {
       node.getOrCreate<metacg::OverrideMD>();
     }

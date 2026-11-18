@@ -25,7 +25,7 @@
 using namespace metacg;
 
 // TODO: Let user set merge policy
-#pragma omp declare reduction(cgmerge : std::unique_ptr<Callgraph> : omp_out->merge(*omp_in, MergeByName())) \
+#pragma omp declare reduction(cgmerge : std::unique_ptr<Callgraph> : omp_out->merge(*omp_in, MergeByNameAndOrigin())) \
     initializer(omp_priv = std::make_unique<Callgraph>())
 
 int main(int argc, char** argv) {
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
       exit(EXIT_FAILURE);
     }
     auto cg = mcgReader->read();
-    mergedCg->merge(*cg, MergeByName());
+    mergedCg->merge(*cg, MergeByNameAndOrigin());
   }
 
   mcgManager.addToManagedGraphs("merged", std::move(mergedCg), true);
