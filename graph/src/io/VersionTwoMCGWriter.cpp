@@ -70,6 +70,7 @@ void metacg::io::VersionTwoMCGWriter::downgradeV4FormatToV2Format(nlohmann::json
     // Otherwise, create the metadata if the origin is not null.
     if (jMeta.contains("fileProperties")) {
       if (!jNode["origin"].is_null()) {
+        assert(jMeta["fileProperties"]["origin"].empty() || jNode["origin"]==jMeta["fileProperties"]["origin"]);
         jMeta["fileProperties"]["origin"] = jNode["origin"];
       } else if (!jMeta["fileProperties"].contains("origin")) {
         // The expected behavior in V2 is to put an empty string if the origin is null.
@@ -80,6 +81,9 @@ void metacg::io::VersionTwoMCGWriter::downgradeV4FormatToV2Format(nlohmann::json
       jMeta["fileProperties"] = nlohmann::json::object();
       jMeta["fileProperties"]["origin"] = jNode["origin"];
     }
+
+    jMeta["fileProperties"]["lineNumber"] =0;
+    jMeta["fileProperties"]["fromSystemInclude"] =false;
     jNode.erase("origin");
 
     jNode["isVirtual"] = false;
