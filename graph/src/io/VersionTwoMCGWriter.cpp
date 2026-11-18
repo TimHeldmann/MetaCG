@@ -82,8 +82,17 @@ void metacg::io::VersionTwoMCGWriter::downgradeV4FormatToV2Format(nlohmann::json
       jMeta["fileProperties"]["origin"] = jNode["origin"];
     }
 
-    jMeta["fileProperties"]["lineNumber"] =0;
-    jMeta["fileProperties"]["fromSystemInclude"] =false;
+    // Complete existing fileProperties with defaults, without overwriting values stored by FileInfoMD.
+    // fileProperties must not be created here, it would lack the origin entry that V2 readers expect.
+    if (jMeta.contains("fileProperties")) {
+      auto& jFileProperties = jMeta["fileProperties"];
+      if (!jFileProperties.contains("systemInclude")) {
+        jFileProperties["systemInclude"] = false;
+      }
+      if (!jFileProperties.contains("lineNumber")) {
+        jFileProperties["lineNumber"] = 0;
+      }
+    }
     jNode.erase("origin");
 
     jNode["isVirtual"] = false;
