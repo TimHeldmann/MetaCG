@@ -81,6 +81,19 @@ struct MergeByName : public MergePolicy {
   std::optional<MergeAction> findMatchingNode(const Callgraph& targetCG, const CgNode& sourceNode) const override;
 };
 
+/**
+ * Like MergeByName, but uses the origin to keep functions with internal linkage of different translation units apart.
+ * Such functions (static functions, functions in anonymous namespaces) can share a name although they are different.
+ *
+ * Nodes with the same name are merged if they have the same origin, or if the origins can not tell them apart: the
+ * origin of one of them is unknown, or one of them has no body (a declaration may be in another file than the
+ * definition). Definitions from different files are kept as separate nodes, so the resulting graph may contain several
+ * nodes with the same name, which only format version 4 can represent.
+ */
+struct MergeByNameAndOrigin : public MergePolicy {
+  std::optional<MergeAction> findMatchingNode(const Callgraph& targetCG, const CgNode& sourceNode) const override;
+};
+
 }  // namespace metacg
 
 #endif  // METACG_MERGEPOLICY_H
