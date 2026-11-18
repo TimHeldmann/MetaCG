@@ -78,7 +78,7 @@ void metacg::io::VersionFourMCGWriter::write(const metacg::Callgraph* cg, metacg
       if (auto jMetaEntry = md->toJson(nodeToStr); !jMetaEntry.empty() && !jMetaEntry.is_null()) {
         jMeta[key] = std::move(jMetaEntry);
       } else {
-        MCGLogger::logWarn("Could not serialize metadata of type {} in node {}", key, node->getFunctionName());
+        //MCGLogger::logWarn("Could not serialize metadata of type {} in node {}", key, node->getFunctionName());
       }
     }
 

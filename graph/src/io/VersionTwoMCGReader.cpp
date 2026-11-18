@@ -95,7 +95,6 @@ void metacg::io::VersionTwoMCGReader::upgradeV2FormatToV4Format(nlohmann::json& 
     auto& jMeta = jNode.at("meta");
     if (jMeta.contains("fileProperties") && !jMeta.at("fileProperties").at("origin").get<std::string>().empty()) {
       jNode["origin"] = jMeta.at("fileProperties").at("origin");
-      jMeta.at("fileProperties").erase("origin");
     } else {
       // if the V2 format did not contain origin data insert null
       jNode["origin"] = nullptr;
