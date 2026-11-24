@@ -61,6 +61,66 @@ else
     fail "shared libs"
 fi
 
+rm -f app app.mcg app.whole.mcg
+
+# Counts the nodes with function name $2 in call graph file $1
+count_nodes()
+{
+    grep -o "\"functionName\": *\"$2\"" "$1" | wc -l
+}
+
+# main.mcg contains a declaration of foo without origin, foo.mcg the definition of foo with origin foo.c
+
+# Test: default merge policy (by name) merges both foo nodes
+if "$CGMERGE2_BIN" merged.mcg "$data_dir/main.mcg" "$data_dir/foo.mcg" \
+    && [ "$(count_nodes merged.mcg foo)" -eq 1 ] \
+    && [ "$(count_nodes merged.mcg main)" -eq 1 ]; then
+    pass "merge policy default"
+else
+    fail "merge policy default"
+fi
+
+rm -f merged.mcg
+
+# Test: explicit merge policy 'name' behaves like the default
+if "$CGMERGE2_BIN" --merge-policy=name merged.mcg "$data_dir/main.mcg" "$data_dir/foo.mcg" \
+    && [ "$(count_nodes merged.mcg foo)" -eq 1 ]; then
+    pass "merge policy name"
+else
+    fail "merge policy name"
+fi
+
+rm -f merged.mcg
+
+# Test: merge policy 'name-and-origin' keeps both foo nodes, as their origins differ
+if "$CGMERGE2_BIN" --merge-policy=name-and-origin merged.mcg "$data_dir/main.mcg" "$data_dir/foo.mcg" \
+    && [ "$(count_nodes merged.mcg foo)" -eq 2 ] \
+    && [ "$(count_nodes merged.mcg main)" -eq 1 ]; then
+    pass "merge policy name-and-origin"
+else
+    fail "merge policy name-and-origin"
+fi
+
+rm -f merged.mcg
+
+# Test: merge policy 'name-and-origin' merges nodes with identical name and origin
+if "$CGMERGE2_BIN" -p name-and-origin merged.mcg "$data_dir/foo.mcg" "$data_dir/foo.mcg" \
+    && [ "$(count_nodes merged.mcg foo)" -eq 1 ]; then
+    pass "merge policy name-and-origin same origin"
+else
+    fail "merge policy name-and-origin same origin"
+fi
+
+rm -f merged.mcg
+
+# Test: unknown merge policy is rejected
+if ! "$CGMERGE2_BIN" --merge-policy=bogus merged.mcg "$data_dir/main.mcg" "$data_dir/foo.mcg" \
+    && [ ! -f merged.mcg ]; then
+    pass "merge policy unknown"
+else
+    fail "merge policy unknown"
+fi
+
 echo ""
 echo "Tests passed: $tests_passed"
 echo "Tests failed: $tests_failed"
