@@ -7,7 +7,7 @@
 #ifndef CGCOLLECTOR2_FUNCTIONSIGNATUREMETADATA_H
 #define CGCOLLECTOR2_FUNCTIONSIGNATUREMETADATA_H
 
-
+#include "cgcollector2/SharedDefs.h"
 #include "metacg/metadata/MetaData.h"
 
 class FunctionSignatureMetadata : public metacg::MetaData::Registrar<FunctionSignatureMetadata> {
@@ -45,6 +45,9 @@ class FunctionSignatureMetadata : public metacg::MetaData::Registrar<FunctionSig
       abort();
     }
     const auto* toMergeDerived = static_cast<const FunctionSignatureMetadata*>(&toMerge);
+    if (!(ownSignature == toMergeDerived->ownSignature)) {
+      metacg::MCGLogger::logError("Signature mismatch: {} <-> {}", ownSignature.toString(), toMergeDerived->ownSignature.toString());
+    }
     assert(ownSignature == toMergeDerived->ownSignature && "The two metadata should be equal");
     // No further merging logic is needed, as the function signatures should be identical
     // it therefore doesn't matter which of the identical signatures we keep in our node.
