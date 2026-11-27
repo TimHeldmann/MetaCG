@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <dlfcn.h>
 
 #include <cxxopts.hpp>
 
@@ -20,6 +21,8 @@
 #include "metacg/MergePolicy.h"
 #include "metacg/io/MCGReader.h"
 #include "metacg/io/MCGWriter.h"
+
+#include "cgmerge2/interface/CGMerge2Plugin.h"
 
 // This may appear to be unused, but the variables declared here have side effects on the graph lib
 #include "metacg/metadata/BuiltinMD.h"
@@ -174,7 +177,6 @@ int main(int argc, char** argv) {
     MCGLogger::logInfo("Using merge policy '{}'", policyName);
   }
   selectedMergePolicy = mergePolicy.get();
-  MCGLogger::logInfo("Using merge policy '{}'", policyName);
 
   const auto outfile = result["output"].as<std::string>();
   const auto inputFiles = result["inputs"].as<std::vector<std::string>>();
