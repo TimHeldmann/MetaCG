@@ -53,7 +53,8 @@ std::string toString(const FunctionSignature& signature) {
  */
 struct MergeByNameAndOriginAndSignature final : cgmerge2::Plugin {
   std::optional<MergeAction> findMatchingNode(const Callgraph& targetCG, const CgNode& sourceNode) const final {
-    auto signatureMatches = findOriginMatches(targetCG, sourceNode);
+    auto signatureMatches = targetCG.getAllNodesWithName(sourceNode.getFunctionName());
+
 
     // Among the nodes with matching name and origin, filter out those with a different function signature.
     // If the source node or a candidate has no signature, the candidate is kept, i.e. matched by name and origin only.
